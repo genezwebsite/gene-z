@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم — Gene_Z</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="../assets/js/theme.js"></script>
+  
+  <style>
+    body { font-family: 'Noto Kufi Arabic', sans-serif !important; background-color: var(--color-surface-secondary); }
+    /* تنسيق خاص للقائمة الجانبية للآدمن */
+    .admin-sidebar { min-height: calc(100vh - 4rem); }
+    .admin-tab.active { background-color: var(--color-accent); color: white; border-color: var(--color-accent); }
+  </style>
+</head>
+<body class="text-content transition-colors duration-300">
+
+  <section id="admin-gate" class="fixed inset-0 z-50 bg-surface flex items-center justify-center">
+    <div class="card p-8 sm:p-10 w-full max-w-md mx-4 shadow-2xl border-t-4 border-accent">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 rounded-full bg-surface-secondary border-2 border-theme mx-auto flex items-center justify-center mb-4 overflow-hidden">
+          <img src="../assets/img/logo.jpeg" alt="Gene_Z Logo" class="w-full h-full object-cover">
+        </div>
+        <h1 class="text-2xl font-bold text-accent mb-2">بوابة المشرفين</h1>
+        <p class="text-sm text-muted">فريق Gene_Z للتكنولوجيا الحيوية</p>
+      </div>
+
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label class="form-label block mb-2 font-semibold" for="login-email">البريد الإلكتروني / اسم المستخدم</label>
+          <input type="text" id="login-email" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left" dir="ltr" required />
+        </div>
+        <div>
+          <label class="form-label block mb-2 font-semibold" for="login-password">كلمة المرور</label>
+          <input type="password" id="login-password" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left" dir="ltr" required />
+        </div>
+        <p id="login-error" class="hidden text-sm text-red-600 font-medium bg-red-50 p-2 rounded">بيانات الدخول غير صحيحة.</p>
+        <button type="submit" class="btn-primary w-full py-3 text-lg mt-2">تسجيل الدخول</button>
+      </form>
+    </div>
+  </section>
+
+  <div id="admin-panel" class="hidden min-h-screen flex flex-col">
+    
+    <header class="bg-surface border-b border-theme shadow-sm sticky top-0 z-40">
+      <div class="px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <span class="font-bold text-xl text-accent">Gene_Z Admin</span>
+          <span id="admin-role-badge" class="text-xs px-3 py-1 rounded-full bg-accent text-white hidden sm:block">مدير عام</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm font-semibold text-muted hidden sm:block" id="admin-welcome-name">مرحباً، عيسى</span>
+          <button type="button" data-theme-toggle class="theme-toggle shadow-sm" aria-label="تبديل الوضع"></button>
+          <button type="button" id="logout-btn" class="btn-outline text-sm py-1.5 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      
+      <aside class="w-64 bg-surface border-l border-theme admin-sidebar hidden md:block overflow-y-auto p-4">
+        <p class="text-xs font-bold text-muted uppercase tracking-wider mb-4 px-2">إدارة الأقسام</p>
+        <nav class="space-y-2">
+          <button class="admin-tab active w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all" data-target="dashboard-section">📊 الإحصائيات العامة</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="courses-section">📚 المواد الدراسية</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="genomedia-section">📰 جينوميديا</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="life-section">🧬 الربط مع الحياة</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="extra-section">🎓 الدورات والتدريب</button>
+        </nav>
+      </aside>
+
+      <main class="flex-1 p-4 sm:p-8 overflow-y-auto">
+        
+        <div id="dashboard-section" class="admin-section">
+          <h2 class="text-2xl font-bold mb-6 text-accent">نظرة عامة وإحصائيات</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="card p-5 border-t-4 border-t-blue-500"><p class="text-sm text-muted mb-1">زيارات الموقع</p><p class="text-2xl font-bold">1,240</p></div>
+            <div class="card p-5 border-t-4 border-t-green-500"><p class="text-sm text-muted mb-1">المواد المحملة</p><p class="text-2xl font-bold">385</p></div>
+            <div class="card p-5 border-t-4 border-t-red-500"><p class="text-sm text-muted mb-1">إعجابات جينوميديا</p><p class="text-2xl font-bold">415</p></div>
+            <div class="card p-5 border-t-4 border-t-yellow-500"><p class="text-sm text-muted mb-1">نقرات الدورات</p><p class="text-2xl font-bold">89</p></div>
+          </div>
+          <div class="card p-6 h-64 flex items-center justify-center border-dashed border-2 border-theme">
+            <p class="text-muted">مساحة محجوزة للرسومات البيانية (Chart.js) التي سيتم ربطها بـ Firebase</p>
+          </div>
+        </div>
+
+        <div id="courses-section" class="admin-section hidden">
+          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة المواد الدراسية</h2>
+          <div class="card p-10 text-center border-dashed border-2 border-theme">
+            <p class="text-muted">واجهة إضافة وحذف المواد ورفع ملفات Google Drive ستكون هنا.</p>
+          </div>
+        </div>
+
+        <div id="genomedia-section" class="admin-section hidden">
+          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة جينوميديا</h2>
+          <div class="card p-10 text-center border-dashed border-2 border-theme">
+            <p class="text-muted">واجهة إضافة الأخبار العلمية والصور ستكون هنا.</p>
+          </div>
+        </div>
+
+        <div id="life-section" class="admin-section hidden">
+          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة الربط مع الحياة</h2>
+          <div class="card p-10 text-center border-dashed border-2 border-theme">
+            <p class="text-muted">واجهة إضافة مواضيع الربط مع الحياة ستكون هنا.</p>
+          </div>
+        </div>
+
+        <div id="extra-section" class="admin-section hidden">
+          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة الدورات والتدريب</h2>
+          <div class="card p-10 text-center border-dashed border-2 border-theme">
+            <p class="text-muted">واجهة إضافة الدورات التدريبية والشارات ستكون هنا.</p>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="admin-toast" class="hidden fixed bottom-6 left-6 bg-green-500 text-white text-sm px-6 py-3 rounded-lg shadow-lg font-medium transition-opacity duration-300 z-50"></div>
+
+  <script>
+    // تخطي تسجيل الدخول مؤقتاً لغايات التصميم
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      document.getElementById('admin-gate').classList.add('hidden');
+      document.getElementById('admin-panel').classList.remove('hidden');
+    });
+
+    // تبديل التبويبات في القائمة الجانبية
+    const tabs = document.querySelectorAll('.admin-tab');
+    const sections = document.querySelectorAll('.admin-section');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => { t.classList.remove('active', 'bg-surface-secondary'); t.classList.add('border-transparent'); });
+        tab.classList.add('active');
+        
+        const target = tab.getAttribute('data-target');
+        sections.forEach(sec => sec.classList.add('hidden'));
+        document.getElementById(target).classList.remove('hidden');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-en="Courses and Study Plan — Gene_Z">المواد والخطة الدراسية — Gene_Z</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="../assets/js/theme.js"></script>
+
+  <style>
+    body { font-family: 'Noto Kufi Arabic', sans-serif; }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen bg-surface text-content transition-colors duration-300">
+
+  <div id="site-header"></div>
+  <div id="site-navbar"></div>
+
+  <main class="flex-1 py-12 sm:py-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div class="mb-10 text-center md:text-start">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-3 text-accent transition-colors duration-300" data-en="Academic Courses">المواد الدراسية</h1>
+        <p class="text-muted max-w-2xl" data-en="Download course files; each course contains its respective explanations and summaries.">
+           وحمل الملفات الخاصة بالمواد، كل مادة تحتوي على الشروحات والملخصات الخاصة بها.
+        </p>
+      </div>
+
+      <div class="mb-8">
+        <label for="course-search" class="form-label mb-2 block font-semibold text-accent" data-en="Comprehensive Search Across All Courses">البحث الشامل في جميع المواد</label>
+        <input
+          type="search"
+          id="course-search"
+          class="form-input max-w-xl w-full p-3 rounded-lg border border-theme bg-surface focus:border-accent outline-none transition-colors"
+          placeholder="ابحث باسم المادة أو رقمها..."
+          autocomplete="off"
+          data-en="Search by course name or number..."
+        />
+      </div>
+
+      <div id="course-tabs" class="grid grid-cols-2 gap-3 md:flex md:flex-row md:border-b md:border-theme mb-8 pb-2" role="tablist">
+        </div>
+
+      <p class="text-sm text-muted mb-6">
+        <span data-en="Courses found: ">تم العثور على </span>
+        <span id="courses-count" class="font-bold text-accent">0</span> 
+        <span data-en=" courses">مادة</span>
+      </p>
+
+      <div id="courses-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        </div>
+
+      <section id="study-plan" class="mt-24 pt-16 border-t border-theme">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-10 text-accent text-center transition-colors duration-300" data-en="Study Plan">الخطة الدراسية</h2>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="card p-4 hover:shadow-lg transition-shadow flex flex-col gap-4">
+            <div class="flex-grow flex items-center justify-center overflow-hidden rounded-lg bg-surface-secondary border border-theme cursor-pointer" onclick="window.open('../assets/img/plan1.jpg', '_blank')" title="اضغط للمعاينة">
+              <img src="../assets/img/plan1.jpg" alt="الخطة الدراسية - الجزء الأول" class="w-full h-auto object-contain hover:scale-105 transition-transform duration-300" onerror="this.src='https://via.placeholder.com/600x800?text=صورة+الخطة+1'">
+            </div>
+            <div class="flex gap-3">
+              
+              <a href="../assets/img/plan1.jpg" download="Gene_Z_Study_Plan_1.jpg" class="btn-primary flex-1 text-center py-2 text-sm" data-en="Download">تنزيل </a>
+            </div>
+          </div>
+
+          <div class="card p-4 hover:shadow-lg transition-shadow flex flex-col gap-4">
+            <div class="flex-grow flex items-center justify-center overflow-hidden rounded-lg bg-surface-secondary border border-theme cursor-pointer" onclick="window.open('../assets/img/plan2.jpg', '_blank')" title="اضغط للمعاينة">
+              <img src="../assets/img/plan2.jpg" alt="الخطة الدراسية - الجزء الثاني" class="w-full h-auto object-contain hover:scale-105 transition-transform duration-300" onerror="this.src='https://via.placeholder.com/600x800?text=صورة+الخطة+2'">
+            </div>
+            <div class="flex gap-3">
+              
+              <a href="../assets/img/plan2.jpg" download="Gene_Z_Study_Plan_2.jpg" class="btn-primary flex-1 text-center py-2 text-sm" data-en="Download">تنزيل </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="../assets/js/courses-data.js"></script>
+  <script src="../assets/js/courses.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

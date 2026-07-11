@@ -5,21 +5,33 @@
     color: #ffffff !important;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
+
+  /* حل المشكلة الثانية: إجبار الأيقونات (مثل الجرس) داخل الزر النشط على التحول للون الأبيض */
+  .nav-link.active svg,
+  .nav-link.active path {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+  }
 </style>
 
 <nav class="border-b border-theme bg-surface-secondary shadow-sm transition-colors duration-300">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- قائمة اللابتوب -->
     <div class="hidden md:flex justify-center items-center gap-2 py-3 overflow-x-auto">
+      <!-- زر الجرس (التحديثات) -->
+      <a data-href="pages/updates.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm flex items-center justify-center" title="الإعلانات والتحديثات">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+      </a>
       <a data-href="index.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Home">الرئيسية</a>
-      <a data-href="index.html#about-us" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Gene_Z">Gene_Z</a>
+      <a data-href="index.html#about-us" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Gene-Z">Gene-Z</a>
       <a data-href="pages/courses.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Academic Courses">المواد الدراسية</a>
       <a data-href="pages/courses.html#study-plan" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Study Plan">الخطة الدراسية</a>
       <a data-href="pages/life-connection.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Real-World Applications">الربط مع الحياة</a>
       <a data-href="pages/news.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="GenoMedia">جينوميديا</a>
       <a data-href="pages/courses-extra.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Training Courses"> الدورات</a>
-      
     </div>
 
+    <!-- شريط زر القائمة للجوال -->
     <div class="md:hidden flex items-center justify-between py-3">
       <span class="text-sm font-bold text-accent" data-en="Menu">القائمة</span>
       <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" type="button" class="p-2 rounded-lg bg-surface border border-theme shadow-sm text-accent focus:outline-none focus:ring-2 focus:ring-accent transition-colors" aria-label="Open menu">
@@ -29,9 +41,15 @@
       </button>
     </div>
 
-   <div id="mobile-menu" class="mobile-nav-overlay hidden md:hidden pb-4 space-y-2 px-2 pt-2">
+    <!-- قائمة الجوال المنسدلة (تم إصلاح الحاوية واستبدال الكلاس المسبب للقص) -->
+    <div id="mobile-menu" class="hidden md:hidden flex-col w-full pb-4 space-y-2 px-2 pt-2 transition-all duration-300">
+      <!-- زر الجرس للموبايل -->
+      <a data-href="pages/updates.html" class="nav-link flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme">
+        <svg class="w-5 h-5 text-accent transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+        <span data-en="Updates & Notifications">الإعلانات والتحديثات</span>
+      </a>
       <a data-href="index.html" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="Home">الرئيسية</a>
-      <a data-href="index.html#about-us" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="About Us">Gene_Z</a>
+      <a data-href="index.html#about-us" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="About Us">Gene-Z</a>
       <a data-href="pages/courses.html" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="Academic Courses">المواد الدراسية</a>
       <a data-href="pages/courses.html#study-plan" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="Study Plan">الخطة الدراسية</a>
       <a data-href="pages/life-connection.html" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="Real-World Applications">الربط مع الحياة</a>

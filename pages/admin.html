@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة التحكم — Gene_Z</title>
+  <title>لوحة التحكم — Gene-Z</title>
   <meta name="robots" content="noindex, nofollow" />
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,27 +13,27 @@
   
   <style>
     body { font-family: 'Noto Kufi Arabic', sans-serif !important; background-color: var(--color-surface-secondary); }
-    /* تنسيق خاص للقائمة الجانبية للآدمن */
     .admin-sidebar { min-height: calc(100vh - 4rem); }
     .admin-tab.active { background-color: var(--color-accent); color: white; border-color: var(--color-accent); }
   </style>
 </head>
 <body class="text-content transition-colors duration-300">
 
+  <!-- بوابة تسجيل الدخول -->
   <section id="admin-gate" class="fixed inset-0 z-50 bg-surface flex items-center justify-center">
     <div class="card p-8 sm:p-10 w-full max-w-md mx-4 shadow-2xl border-t-4 border-accent">
       <div class="text-center mb-8">
         <div class="w-16 h-16 rounded-full bg-surface-secondary border-2 border-theme mx-auto flex items-center justify-center mb-4 overflow-hidden">
-          <img src="../assets/img/logo.jpeg" alt="Gene_Z Logo" class="w-full h-full object-cover">
+          <img src="../assets/img/logo.jpeg" alt="Gene-Z Logo" class="w-full h-full object-cover">
         </div>
         <h1 class="text-2xl font-bold text-accent mb-2">بوابة المشرفين</h1>
-        <p class="text-sm text-muted">فريق Gene_Z للتكنولوجيا الحيوية</p>
+        <p class="text-sm text-muted">فريق Gene-Z للتكنولوجيا الحيوية</p>
       </div>
 
       <form id="login-form" class="space-y-5">
         <div>
-          <label class="form-label block mb-2 font-semibold" for="login-email">البريد الإلكتروني / اسم المستخدم</label>
-          <input type="text" id="login-email" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left" dir="ltr" required />
+          <label class="form-label block mb-2 font-semibold" for="login-email">البريد الإلكتروني</label>
+          <input type="email" id="login-email" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left" dir="ltr" required />
         </div>
         <div>
           <label class="form-label block mb-2 font-semibold" for="login-password">كلمة المرور</label>
@@ -45,16 +45,17 @@
     </div>
   </section>
 
+  <!-- لوحة التحكم الرئيسية -->
   <div id="admin-panel" class="hidden min-h-screen flex flex-col">
     
     <header class="bg-surface border-b border-theme shadow-sm sticky top-0 z-40">
       <div class="px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
-          <span class="font-bold text-xl text-accent">Gene_Z Admin</span>
-          <span id="admin-role-badge" class="text-xs px-3 py-1 rounded-full bg-accent text-white hidden sm:block">مدير عام</span>
+          <span class="font-bold text-xl text-accent">Gene-Z Admin</span>
+          <span id="admin-role-badge" class="text-xs px-3 py-1 rounded-full bg-accent text-white hidden sm:block">جاري التحقق...</span>
         </div>
         <div class="flex items-center gap-4">
-          <span class="text-sm font-semibold text-muted hidden sm:block" id="admin-welcome-name">مرحباً، عيسى</span>
+          <span class="text-sm font-semibold text-muted hidden sm:block" id="admin-welcome-name">مرحباً</span>
           <button type="button" data-theme-toggle class="theme-toggle shadow-sm" aria-label="تبديل الوضع"></button>
           <button type="button" id="logout-btn" class="btn-outline text-sm py-1.5 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">تسجيل الخروج</button>
         </div>
@@ -91,9 +92,23 @@
 
         <div id="courses-section" class="admin-section hidden">
           <h2 class="text-2xl font-bold mb-6 text-accent">إدارة المواد الدراسية</h2>
-          <div class="card p-10 text-center border-dashed border-2 border-theme">
-            <p class="text-muted">واجهة إضافة وحذف المواد ورفع ملفات Google Drive ستكون هنا.</p>
+          
+          <!-- صندوق تجربة إنشاء المجلد -->
+          <div class="card p-6 border border-theme shadow-sm mb-6">
+            <h3 class="text-lg font-bold mb-4">تجربة إضافة مادة (إنشاء مجلد في درايف)</h3>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <input type="text" id="test-folder-name" placeholder="اسم المادة (مثال: بيولوجيا جزيئية)" class="form-input flex-1 p-3 rounded-lg border border-theme bg-surface text-right focus:border-accent outline-none" />
+              <button id="test-create-folder-btn" class="btn-primary px-6 py-3 rounded-lg whitespace-nowrap transition-all">إنشاء المجلد</button>
+            </div>
+            
+            <!-- صندوق عرض النتيجة -->
+            <div id="test-result" class="mt-6 text-sm hidden p-4 rounded-lg bg-surface-secondary border border-green-200">
+              <!-- سيتم حقن النتيجة هنا عبر الجافاسكريبت -->
+            </div>
           </div>
+
+          <!-- الحاوية الخاصة بعرض الكورسات (مربوطة بكود الجافاسكريبت القديم) -->
+          <div id="admin-course-list" class="card p-4 border border-theme shadow-sm"></div>
         </div>
 
         <div id="genomedia-section" class="admin-section hidden">
@@ -121,30 +136,9 @@
     </div>
   </div>
 
-  <div id="admin-toast" class="hidden fixed bottom-6 left-6 bg-green-500 text-white text-sm px-6 py-3 rounded-lg shadow-lg font-medium transition-opacity duration-300 z-50"></div>
+  <div id="admin-toast" class="hidden fixed bottom-6 left-6 text-white text-sm px-6 py-3 rounded-lg shadow-lg font-medium transition-opacity duration-300 z-50"></div>
 
-  <script>
-    // تخطي تسجيل الدخول مؤقتاً لغايات التصميم
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      document.getElementById('admin-gate').classList.add('hidden');
-      document.getElementById('admin-panel').classList.remove('hidden');
-    });
-
-    // تبديل التبويبات في القائمة الجانبية
-    const tabs = document.querySelectorAll('.admin-tab');
-    const sections = document.querySelectorAll('.admin-section');
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => { t.classList.remove('active', 'bg-surface-secondary'); t.classList.add('border-transparent'); });
-        tab.classList.add('active');
-        
-        const target = tab.getAttribute('data-target');
-        sections.forEach(sec => sec.classList.add('hidden'));
-        document.getElementById(target).classList.remove('hidden');
-      });
-    });
-  </script>
+  <!-- استدعاء ملف الجافاسكريبت كـ Module -->
+  <script type="module" src="../assets/js/admin.js"></script>
 </body>
 </html>

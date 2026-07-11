@@ -1,300 +1,289 @@
 /**
- * Gene_Z Admin Dashboard
+ * Gene-Z Admin Dashboard
  * -----------------------------------------------
- * Client-side gatekeeper (ready for Firebase/backend auth).
- * Manages CRUD for courses + resource attachments via localStorage.
- *
- * Default credentials (CHANGE BEFORE PRODUCTION):
- *   Username: genez_admin
- *   Password: GeneZ@2026
- *
- * Session stored in sessionStorage as "gene_z_admin_session".
+ * Firebase Authentication & Firestore RBAC
+ * Google Drive API Integration
+ * Local CRUD for Courses
  */
-(function () {
-  const AUTH = {
-    username: "genez_admin",
-    password: "GeneZ@2026",
-  };
-  const SESSION_KEY = "gene_z_admin_session";
 
-  let editingCourseId = null;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  /* ── Auth ── */
-  function isAuthenticated() {
-    return sessionStorage.getItem(SESSION_KEY) === "true";
-  }
+// ==========================================
+// 1. Firebase Config (غيّرها لاحقاً بمعلومات مشروعك)
+// ==========================================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-  function login(username, password) {
-    if (username === AUTH.username && password === AUTH.password) {
-      sessionStorage.setItem(SESSION_KEY, "true");
-      return true;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ==========================================
+// 2. Drive APIs Config
+// ==========================================
+const DRIVE_APIS = {
+  courses: "https://script.google.com/macros/s/AKfycbykX6LYMVTnVRKvtTfRToSqZvlWgzeBHoIyjyM683jr0Z0n8ypWHo-lx9LHSo6hdgmD/exec",
+  life: "https://script.google.com/macros/s/AKfycbwLnxaBS2buz796FdWRckzQnIEHkFUWdkrzdJ0LGqIz6YCIO0NYhyfSXkDBF5jxioVt/exec",
+  genomedia: "https://script.google.com/macros/s/AKfycbzVQsbGcgqlzhEnK8PDfXyH_Tf5_kKX4q3me20ESe6T7jkw_pJvfHljoVbG-Jnqj0jUvw/exec"
+};
+
+// ==========================================
+// 3. Global Variables & DOM Elements
+// ==========================================
+let editingCourseId = null;
+
+const loginForm = document.getElementById('login-form');
+const loginGate = document.getElementById('admin-gate');
+const adminPanel = document.getElementById('admin-panel');
+const logoutBtn = document.getElementById('logout-btn');
+const loginError = document.getElementById('login-error');
+const adminWelcomeName = document.getElementById('admin-welcome-name');
+const adminRoleBadge = document.getElementById('admin-role-badge');
+const adminTabs = document.querySelectorAll('.admin-tab');
+const sections = document.querySelectorAll('.admin-section');
+
+// ==========================================
+// 4. Authentication & Dashboard Setup
+// ==========================================
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      // جلب بيانات وصلاحيات المستخدم من فايربيس
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        setupDashboard(userDoc.data());
+      } else {
+        // حالة مؤقتة للمطورين: في حال لم نقم بإعداد قاعدة البيانات بعد، نسمح بالدخول كأدمن عام مؤقتاً
+        console.warn("User document not found in Firestore. Granting temporary access for development.");
+        setupDashboard({ name: "عيسى (Test)", role: "super_admin", roleTitle: "مدير عام (مؤقت)" });
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
     }
-    return false;
-  }
-
-  function logout() {
-    sessionStorage.removeItem(SESSION_KEY);
+  } else {
     showGate();
   }
+});
 
-  function showGate() {
-    document.getElementById("admin-gate")?.classList.remove("hidden");
-    document.getElementById("admin-panel")?.classList.add("hidden");
-  }
+// استبدل الجزء الخاص بالـ submit بـ هذا الكود لتجاوز تسجيل الدخول
+loginForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // تجاوز التحقق (Mock Login)
+  console.log("تم التجاوز مؤقتاً...");
+  
+  // نحاكي بيانات مستخدم "مدير عام"
+  const mockUserData = { 
+    name: "عيسى", 
+    role: "super_admin", 
+    roleTitle: "مدير عام (تجريبي)" 
+  };
+  
+  setupDashboard(mockUserData);
+});
 
-  function showPanel() {
-    document.getElementById("admin-gate")?.classList.add("hidden");
-    document.getElementById("admin-panel")?.classList.remove("hidden");
-    renderAdminCourseList();
-    populateCategorySelect();
-  }
+logoutBtn?.addEventListener('click', () => {
+  signOut(auth);
+});
 
-  /* ── Course CRUD ── */
-  function populateCategorySelect() {
-    const select = document.getElementById("course-category");
-    if (!select || !window.GeneZCourses) return;
-    select.innerHTML = Object.values(GeneZCourses.CATEGORIES)
-      .map(
-        (c) =>
-          `<option value="${c.id}">${c.labelEn} — ${c.labelAr}</option>`
-      )
-      .join("");
-  }
+function showGate() {
+  loginGate?.classList.remove("hidden");
+  adminPanel?.classList.add("hidden");
+}
 
-  function renderAdminCourseList() {
-    const list = document.getElementById("admin-course-list");
-    if (!list || !window.GeneZCourses) return;
+function setupDashboard(userData) {
+  loginGate?.classList.add('hidden');
+  adminPanel?.classList.remove('hidden');
+  
+  adminWelcomeName.innerText = `مرحباً، ${userData.name || 'أدمن'}`;
+  adminRoleBadge.innerText = userData.roleTitle || 'مشرف';
 
-    const courses = GeneZCourses.getCourses();
-    if (!courses.length) {
-      list.innerHTML = `<p class="text-sm text-muted p-4">No courses yet. Add one below.</p>`;
-      return;
+  // إعداد الصلاحيات والتبويبات
+  adminTabs.forEach(tab => tab.style.display = 'none');
+  if (userData.role === 'super_admin') {
+    adminTabs.forEach(tab => tab.style.display = 'block');
+    document.querySelector('[data-target="dashboard-section"]')?.click();
+  } else {
+    const targetTab = document.querySelector(`[data-target="${userData.allowedSection}"]`);
+    if (targetTab) {
+      targetTab.style.display = 'block';
+      targetTab.click();
     }
+  }
 
-    list.innerHTML = courses
-      .map((c) => {
-        const cat = GeneZCourses.CATEGORIES[c.category];
-        return `
-        <div class="flex items-center justify-between gap-4 p-4 border-b border-theme last:border-0">
-          <div class="min-w-0 flex-1">
-            <p class="font-medium truncate">${c.title}</p>
-            <p class="ar-text text-xs text-muted">${c.titleAr || ""}</p>
-            <p class="text-xs text-accent mt-1">${cat ? cat.labelEn : c.category}</p>
-          </div>
-          <div class="flex gap-2 shrink-0">
-            <button type="button" class="btn-outline text-xs py-1 px-3" data-edit="${c.id}">Edit</button>
-            <button type="button" class="btn-danger" data-delete="${c.id}">Delete</button>
-          </div>
-        </div>`;
-      })
-      .join("");
+  // تشغيل دوال الـ CRUD القديمة
+  renderAdminCourseList();
+  populateCategorySelect();
+}
 
-    list.querySelectorAll("[data-edit]").forEach((btn) => {
-      btn.addEventListener("click", () => loadCourseForEdit(btn.dataset.edit));
+// تفعيل التنقل بين التبويبات (Tabs Logic)
+adminTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    adminTabs.forEach(t => { 
+      t.classList.remove('active', 'bg-surface-secondary'); 
+      t.classList.add('border-transparent'); 
     });
-    list.querySelectorAll("[data-delete]").forEach((btn) => {
-      btn.addEventListener("click", () => deleteCourse(btn.dataset.delete));
+    tab.classList.add('active');
+    
+    const target = tab.getAttribute('data-target');
+    sections.forEach(sec => sec.classList.add('hidden'));
+    document.getElementById(target)?.classList.remove('hidden');
+  });
+});
+
+// ==========================================
+// 5. Drive API Implementation
+// ==========================================
+async function fetchFolderInfo(section, folderName) {
+  const url = DRIVE_APIS[section];
+  if (!url) {
+    showToast("القسم غير صالح أو لا يملك رابط API", "error");
+    return null;
+  }
+
+  try {
+    showToast("جاري إنشاء المجلد على Google Drive...", "info");
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ folderName: folderName })
     });
-  }
 
-  function loadCourseForEdit(id) {
-    const course = GeneZCourses.getCourses().find((c) => c.id === id);
-    if (!course) return;
+    const data = await response.json();
 
-    editingCourseId = id;
-    document.getElementById("course-title").value = course.title;
-    document.getElementById("course-title-ar").value = course.titleAr || "";
-    document.getElementById("course-category").value = course.category;
-    document.getElementById("course-description").value = course.description;
-    document.getElementById("course-description-ar").value = course.descriptionAr || "";
-    document.getElementById("form-mode-label").textContent = "Edit Course";
-    document.getElementById("cancel-edit-btn").classList.remove("hidden");
-    renderResourceManager(course);
-    document.getElementById("course-form").scrollIntoView({ behavior: "smooth" });
-  }
-
-  function resetForm() {
-    editingCourseId = null;
-    document.getElementById("course-form")?.reset();
-    document.getElementById("form-mode-label").textContent = "Add New Course";
-    document.getElementById("cancel-edit-btn")?.classList.add("hidden");
-    document.getElementById("resource-manager").innerHTML =
-      '<p class="text-xs text-muted">Save the course first, then attach resources.</p>';
-  }
-
-  function saveCourse(e) {
-    e.preventDefault();
-    const courses = GeneZCourses.getCourses();
-
-    const payload = {
-      title: document.getElementById("course-title").value.trim(),
-      titleAr: document.getElementById("course-title-ar").value.trim(),
-      category: document.getElementById("course-category").value,
-      description: document.getElementById("course-description").value.trim(),
-      descriptionAr: document.getElementById("course-description-ar").value.trim(),
-    };
-
-    if (!payload.title || !payload.category) {
-      alert("Title and category are required.");
-      return;
-    }
-
-    if (editingCourseId) {
-      const idx = courses.findIndex((c) => c.id === editingCourseId);
-      if (idx !== -1) {
-        courses[idx] = { ...courses[idx], ...payload };
-      }
+    if (data.success === true) {
+      showToast("تم إنشاء المجلد بنجاح!", "success");
+      return { folderId: data.folderId, embedUrl: data.embedUrl };
     } else {
-      courses.push({
-        id: GeneZCourses.generateId("course"),
-        ...payload,
-        resources: [],
-      });
+      throw new Error(data.error || "حدث خطأ غير معروف في خادم جوجل");
     }
+  } catch (error) {
+    console.error("Drive API Error:", error);
+    showToast("فشل الاتصال بـ Google Drive", "error");
+    return null;
+  }
+}
 
-    GeneZCourses.saveCourses(courses);
-    resetForm();
-    renderAdminCourseList();
-    showToast("Course saved successfully.");
+// زر تجربة الدرايف
+const testBtn = document.getElementById('test-create-folder-btn');
+const testInput = document.getElementById('test-folder-name');
+const testResult = document.getElementById('test-result');
+
+testBtn?.addEventListener('click', async () => {
+  const folderName = testInput.value.trim();
+  if (!folderName) {
+    showToast("الرجاء إدخال اسم المادة (المجلد)", "error");
+    return;
   }
 
-  function deleteCourse(id) {
-    if (!confirm("Delete this course and all attached resources?")) return;
-    const filtered = GeneZCourses.getCourses().filter((c) => c.id !== id);
-    GeneZCourses.saveCourses(filtered);
-    if (editingCourseId === id) resetForm();
-    renderAdminCourseList();
-    showToast("Course deleted.");
+  testBtn.disabled = true;
+  testBtn.innerText = "جاري الإنشاء...";
+  testBtn.classList.add('opacity-70');
+  testResult.classList.add('hidden');
+
+  const result = await fetchFolderInfo('courses', folderName);
+
+  if (result) {
+    testResult.classList.remove('hidden');
+    testResult.innerHTML = `
+      <div class="flex items-center gap-2 text-green-600 font-bold mb-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        تم إنشاء المجلد بنجاح!
+      </div>
+      <div class="space-y-2 text-muted">
+        <p><strong>ID المجلد:</strong> <span dir="ltr" class="bg-surface px-2 py-1 rounded border border-theme text-xs">${result.folderId}</span></p>
+        <p><strong>رابط العرض (iFrame):</strong> <br> 
+          <a href="${result.embedUrl}" target="_blank" class="text-blue-500 hover:underline break-all mt-1 inline-block" dir="ltr">${result.embedUrl}</a>
+        </p>
+      </div>
+    `;
+    testInput.value = ''; 
   }
 
-  /* ── Resource attachments ── */
-  function renderResourceManager(course) {
-    const container = document.getElementById("resource-manager");
-    if (!container) return;
+  testBtn.disabled = false;
+  testBtn.innerText = "إنشاء المجلد";
+  testBtn.classList.remove('opacity-70');
+});
 
-    const resources = course.resources || [];
-    container.innerHTML = `
-      <div class="space-y-3">
-        <p class="text-sm font-medium">Resources for: ${course.title}</p>
-        ${
-          resources.length
-            ? `<ul class="space-y-2">${resources
-                .map(
-                  (r) => `
-              <li class="flex items-center justify-between gap-2 text-sm p-2 bg-surface-secondary rounded-lg">
-                <span class="truncate">${r.name} <span class="text-xs text-muted">(${r.type})</span></span>
-                <button type="button" class="btn-danger" data-remove-resource="${r.id}">Remove</button>
-              </li>`
-                )
-                .join("")}</ul>`
-            : `<p class="text-xs text-muted">No resources yet.</p>`
-        }
-        <div class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-theme">
-          <div>
-            <label class="form-label" for="resource-name">Resource Name</label>
-            <input type="text" id="resource-name" class="form-input" placeholder="Lecture Slides Week 1" />
-          </div>
-          <div>
-            <label class="form-label" for="resource-type">Type</label>
-            <select id="resource-type" class="form-select">
-              <option value="file">File (static link)</option>
-              <option value="link">External Link</option>
-              <option value="video">Video URL</option>
-            </select>
-          </div>
-          <div class="sm:col-span-2">
-            <label class="form-label" for="resource-url">URL / File Path</label>
-            <input type="url" id="resource-url" class="form-input" placeholder="https://..." />
-          </div>
-          <div class="sm:col-span-2">
-            <button type="button" id="add-resource-btn" class="btn-primary">Attach Resource</button>
-          </div>
-        </div>
-      </div>`;
+// ==========================================
+// 6. UI Helpers
+// ==========================================
+function showToast(msg, type = "success") {
+  const toast = document.getElementById("admin-toast");
+  if (!toast) return;
+  
+  toast.textContent = msg;
+  toast.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500', 'hidden', 'opacity-0');
+  
+  if (type === "error") toast.classList.add('bg-red-500');
+  else if (type === "info") toast.classList.add('bg-blue-500');
+  else toast.classList.add('bg-green-500');
 
-    container.querySelector("#add-resource-btn")?.addEventListener("click", () => {
-      addResource(course.id);
-    });
-    container.querySelectorAll("[data-remove-resource]").forEach((btn) => {
-      btn.addEventListener("click", () => removeResource(course.id, btn.dataset.removeResource));
-    });
+  setTimeout(() => toast.classList.add("opacity-0"), 2500);
+  setTimeout(() => toast.classList.add("hidden"), 3000);
+}
+
+// ==========================================
+// 7. Legacy Course CRUD (From original admin.js)
+// ==========================================
+function populateCategorySelect() {
+  const select = document.getElementById("course-category");
+  if (!select || !window.GeneZCourses) return;
+  select.innerHTML = Object.values(window.GeneZCourses.CATEGORIES)
+    .map(c => `<option value="${c.id}">${c.labelEn} — ${c.labelAr}</option>`)
+    .join("");
+}
+
+function renderAdminCourseList() {
+  const list = document.getElementById("admin-course-list");
+  if (!list || !window.GeneZCourses) return;
+
+  const courses = window.GeneZCourses.getCourses();
+  if (!courses.length) {
+    list.innerHTML = `<p class="text-sm text-muted p-4">لا توجد مواد بعد.</p>`;
+    return;
   }
 
-  function addResource(courseId) {
-    const name = document.getElementById("resource-name")?.value.trim();
-    const type = document.getElementById("resource-type")?.value;
-    const url = document.getElementById("resource-url")?.value.trim();
+  list.innerHTML = courses.map(c => {
+    const cat = window.GeneZCourses.CATEGORIES[c.category];
+    return `
+    <div class="flex items-center justify-between gap-4 p-4 border-b border-theme last:border-0">
+      <div class="min-w-0 flex-1">
+        <p class="font-medium truncate">${c.title}</p>
+        <p class="ar-text text-xs text-muted">${c.titleAr || ""}</p>
+        <p class="text-xs text-accent mt-1">${cat ? cat.labelAr : c.category}</p>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <button type="button" class="btn-danger" data-delete="${c.id}">حذف</button>
+      </div>
+    </div>`;
+  }).join("");
 
-    if (!name || !url) {
-      alert("Resource name and URL are required.");
-      return;
-    }
+  list.querySelectorAll("[data-delete]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteCourse(btn.dataset.delete));
+  });
+}
 
-    const courses = GeneZCourses.getCourses();
-    const course = courses.find((c) => c.id === courseId);
-    if (!course) return;
+function deleteCourse(id) {
+  if (!confirm("هل أنت متأكد من حذف هذه المادة؟")) return;
+  const filtered = window.GeneZCourses.getCourses().filter((c) => c.id !== id);
+  window.GeneZCourses.saveCourses(filtered);
+  renderAdminCourseList();
+  showToast("تم حذف المادة.", "success");
+}
 
-    course.resources = course.resources || [];
-    course.resources.push({
-      id: GeneZCourses.generateId("res"),
-      type,
-      name,
-      url,
-    });
-
-    GeneZCourses.saveCourses(courses);
-    renderResourceManager(course);
-    showToast("Resource attached.");
+// تشغيل بعض المهام عند تحميل الصفحة إذا كان GeneZCourses موجوداً
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.GeneZCourses) {
+    window.GeneZCourses.seedIfEmpty();
   }
-
-  function removeResource(courseId, resourceId) {
-    const courses = GeneZCourses.getCourses();
-    const course = courses.find((c) => c.id === courseId);
-    if (!course) return;
-
-    course.resources = (course.resources || []).filter((r) => r.id !== resourceId);
-    GeneZCourses.saveCourses(courses);
-    renderResourceManager(course);
-    showToast("Resource removed.");
-  }
-
-  function showToast(msg) {
-    const toast = document.getElementById("admin-toast");
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.remove("hidden", "opacity-0");
-    setTimeout(() => toast.classList.add("opacity-0"), 2500);
-    setTimeout(() => toast.classList.add("hidden"), 3000);
-  }
-
-  /* ── Init ── */
-  function init() {
-    GeneZCourses.seedIfEmpty();
-
-    if (isAuthenticated()) {
-      showPanel();
-    } else {
-      showGate();
-    }
-
-    document.getElementById("login-form")?.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const user = document.getElementById("login-username").value.trim();
-      const pass = document.getElementById("login-password").value;
-      const err = document.getElementById("login-error");
-
-      if (login(user, pass)) {
-        err?.classList.add("hidden");
-        showPanel();
-      } else {
-        err?.classList.remove("hidden");
-      }
-    });
-
-    document.getElementById("logout-btn")?.addEventListener("click", logout);
-    document.getElementById("course-form")?.addEventListener("submit", saveCourse);
-    document.getElementById("cancel-edit-btn")?.addEventListener("click", resetForm);
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-})();
+});

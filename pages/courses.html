@@ -29,10 +29,11 @@
       <div class="mb-10 text-center md:text-start">
         <h1 class="text-3xl sm:text-4xl font-bold mb-3 text-accent transition-colors duration-300" data-en="Academic Courses">المواد الدراسية</h1>
         <p class="text-muted max-w-2xl" data-en="Download course files; each course contains its respective explanations and summaries.">
-           وحمل الملفات الخاصة بالمواد، كل مادة تحتوي على الشروحات والملخصات الخاصة بها.
+           تصفح وحمل الملفات الخاصة بالمواد، كل مادة تحتوي على الشروحات والملخصات الخاصة بها.
         </p>
       </div>
 
+      <!-- شريط البحث -->
       <div class="mb-8">
         <label for="course-search" class="form-label mb-2 block font-semibold text-accent" data-en="Comprehensive Search Across All Courses">البحث الشامل في جميع المواد</label>
         <input
@@ -45,8 +46,8 @@
         />
       </div>
 
-      <div id="course-tabs" class="grid grid-cols-2 gap-3 md:flex md:flex-row md:border-b md:border-theme mb-8 pb-2" role="tablist">
-        </div>
+      <!-- تبويبات التصنيف -->
+      <div id="course-tabs" class="grid grid-cols-2 gap-3 md:flex md:flex-row md:border-b md:border-theme mb-8 pb-2" role="tablist"></div>
 
       <p class="text-sm text-muted mb-6">
         <span data-en="Courses found: ">تم العثور على </span>
@@ -54,32 +55,45 @@
         <span data-en=" courses">مادة</span>
       </p>
 
-      <div id="courses-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        </div>
+      <!-- شبكة عرض المواد -->
+      <div id="courses-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
+      <!-- قسم الخطة الدراسية (مربوط ديناميكياً بلوحة التحكم) -->
       <section id="study-plan" class="mt-24 pt-16 border-t border-theme">
         <h2 class="text-3xl sm:text-4xl font-bold mb-10 text-accent text-center transition-colors duration-300" data-en="Study Plan">الخطة الدراسية</h2>
         
         <div class="grid md:grid-cols-2 gap-8">
-          <div class="card p-4 hover:shadow-lg transition-shadow flex flex-col gap-4">
-            <div class="flex-grow flex items-center justify-center overflow-hidden rounded-lg bg-surface-secondary border border-theme cursor-pointer" onclick="window.open('../assets/img/plan1.jpg', '_blank')" title="اضغط للمعاينة">
-              <img src="../assets/img/plan1.jpg" alt="الخطة الدراسية - الجزء الأول" class="w-full h-auto object-contain hover:scale-105 transition-transform duration-300" onerror="this.src='https://via.placeholder.com/600x800?text=صورة+الخطة+1'">
+          
+          <!-- بطاقة الخطة الشجرية -->
+          <div class="card p-5 hover:shadow-lg transition-shadow flex flex-col justify-between gap-4 bg-surface-secondary border border-theme rounded-xl">
+            <div>
+              <h3 class="font-bold text-lg mb-1 text-accent flex items-center gap-2"><span>🌳</span> الخطة الشجرية (2024-2025)</h3>
+              <p class="text-xs text-muted mb-4">التسلسل الهرمي لمتطلبات التخصص والمواد السابقة.</p>
+              <div class="flex items-center justify-center overflow-hidden rounded-lg bg-surface border border-theme h-64">
+                <img id="tree-plan-img" src="../assets/img/plan2.jpg" alt="الخطة الشجرية" class="w-full h-full object-contain hover:scale-105 transition-transform duration-300" onerror="this.src='https://via.placeholder.com/600x400?text=الخطة+الشجرية'">
+              </div>
             </div>
-            <div class="flex gap-3">
-              
-              <a href="../assets/img/plan1.jpg" download="Gene_Z_Study_Plan_1.jpg" class="btn-primary flex-1 text-center py-2 text-sm" data-en="Download">تنزيل </a>
+            <div class="flex gap-3 pt-3 border-t border-theme">
+              <a id="tree-plan-view-btn" href="../assets/img/plan2.jpg" target="_blank" class="btn-outline flex-1 text-center py-2.5 text-sm rounded font-semibold border-theme hover:border-accent">معاينة الملف 👁️</a>
+              <a id="tree-plan-down-btn" href="../assets/img/plan2.jpg" download="Gene_Z_Tree_Plan.jpg" class="btn-primary flex-1 text-center py-2.5 text-sm rounded font-semibold">تنزيل ⬇️</a>
             </div>
           </div>
 
-          <div class="card p-4 hover:shadow-lg transition-shadow flex flex-col gap-4">
-            <div class="flex-grow flex items-center justify-center overflow-hidden rounded-lg bg-surface-secondary border border-theme cursor-pointer" onclick="window.open('../assets/img/plan2.jpg', '_blank')" title="اضغط للمعاينة">
-              <img src="../assets/img/plan2.jpg" alt="الخطة الدراسية - الجزء الثاني" class="w-full h-auto object-contain hover:scale-105 transition-transform duration-300" onerror="this.src='https://via.placeholder.com/600x800?text=صورة+الخطة+2'">
+          <!-- بطاقة جدول المتطلبات -->
+          <div class="card p-5 hover:shadow-lg transition-shadow flex flex-col justify-between gap-4 bg-surface-secondary border border-theme rounded-xl">
+            <div>
+              <h3 class="font-bold text-lg mb-1 text-accent flex items-center gap-2"><span>📑</span> جدول الخطة الدراسية (المتطلبات)</h3>
+              <p class="text-xs text-muted mb-4">جدول الساعات، أرقام المواد، وتوزيع الفصول الدراسية.</p>
+              <div class="flex items-center justify-center overflow-hidden rounded-lg bg-surface border border-theme h-64">
+                <img id="table-plan-img" src="../assets/img/plan1.jpg" alt="جدول الخطة" class="w-full h-full object-contain hover:scale-105 transition-transform duration-300" onerror="this.src='https://via.placeholder.com/600x400?text=جدول+الخطة'">
+              </div>
             </div>
-            <div class="flex gap-3">
-              
-              <a href="../assets/img/plan2.jpg" download="Gene_Z_Study_Plan_2.jpg" class="btn-primary flex-1 text-center py-2 text-sm" data-en="Download">تنزيل </a>
+            <div class="flex gap-3 pt-3 border-t border-theme">
+              <a id="table-plan-view-btn" href="../assets/img/plan1.jpg" target="_blank" class="btn-outline flex-1 text-center py-2.5 text-sm rounded font-semibold border-theme hover:border-accent">معاينة الملف 👁️</a>
+              <a id="table-plan-down-btn" href="../assets/img/plan1.jpg" download="Gene_Z_Table_Plan.jpg" class="btn-primary flex-1 text-center py-2.5 text-sm rounded font-semibold">تنزيل ⬇️</a>
             </div>
           </div>
+
         </div>
       </section>
 
@@ -91,5 +105,44 @@
   <script src="../assets/js/courses-data.js"></script>
   <script src="../assets/js/courses.js"></script>
   <script src="../assets/js/main.js"></script>
+
+  <!-- سكربت قراءة الخطة الدراسية من لوحة التحكم -->
+  <!-- سكربت قراءة الخطة الدراسية من لوحة التحكم (تم التعديل لدعم المعاينة المباشرة وتفادي الصورة البيضاء) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!window.GeneZCourses || !window.GeneZCourses.getStudyPlan) return;
+      const plan = GeneZCourses.getStudyPlan();
+      
+      // معالجة الخطة الشجرية
+      if (plan.tree) {
+        const treeImg = document.getElementById("tree-plan-img");
+        const treeViewBtn = document.getElementById("tree-plan-view-btn");
+        const treeDownBtn = document.getElementById("tree-plan-down-btn");
+
+        // استخدام previewUrl للمعاينة داخل وسم img، أو url كبديل
+        if (treeImg) {
+          treeImg.src = plan.tree.previewUrl || plan.tree.url;
+          treeImg.onerror = function() { this.src = 'https://placehold.co/600x400?text=الخطة+الشجرية'; };
+        }
+        if (treeViewBtn) treeViewBtn.href = plan.tree.url || '#';
+        if (treeDownBtn) treeDownBtn.href = plan.tree.downloadUrl || plan.tree.url || '#';
+      }
+
+      // معالجة جدول الخطة الدراسية
+      if (plan.table) {
+        const tableImg = document.getElementById("table-plan-img");
+        const tableViewBtn = document.getElementById("table-plan-view-btn");
+        const tableDownBtn = document.getElementById("table-plan-down-btn");
+
+        // استخدام previewUrl للمعاينة داخل وسم img، أو url كبديل
+        if (tableImg) {
+          tableImg.src = plan.table.previewUrl || plan.table.url;
+          tableImg.onerror = function() { this.src = 'https://placehold.co/600x400?text=جدول+الخطة'; };
+        }
+        if (tableViewBtn) tableViewBtn.href = plan.table.url || '#';
+        if (tableDownBtn) tableDownBtn.href = plan.table.downloadUrl || plan.table.url || '#';
+      }
+    });
+  </script>
 </body>
 </html>

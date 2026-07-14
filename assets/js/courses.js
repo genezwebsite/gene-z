@@ -1,5 +1,11 @@
+/**
+ * Gene_Z Courses Display & Filter Script
+ * -----------------------------------------------
+ * يتعامل مع عرض بطاقات المواد، الفلترة الفورية، والبحث الشامل.
+ */
 (function () {
-  let activeCategory = "dept-mandatory";
+  // التبويب الافتراضي: متطلبات تخصص إجبارية[cite: 9]
+  let activeCategory = "major-req";
   let searchQuery = "";
 
   function renderTabs() {
@@ -8,7 +14,6 @@
 
     const isSearching = searchQuery.trim().length > 0;
     const { CATEGORIES } = GeneZCourses;
-    
     const lang = localStorage.getItem("gene_z_lang") || "ar";
 
     container.innerHTML = Object.values(CATEGORIES)
@@ -42,20 +47,17 @@
     const isGlobalSearch = q.length > 0;
 
     return courses.filter((c) => {
-      if (!isGlobalSearch && c.category !== activeCategory) return false;
+      // فحص التصنيف (إذا لم يكن هناك بحث شامل)[cite: 8]
+      const courseCat = c.type || c.category;
+      if (!isGlobalSearch && courseCat !== activeCategory) return false;
       if (!q) return true;
 
-      const titleEn = (c.titleEn || c.title || "").toLowerCase();
-      const titleAr = (c.titleAr || c.title || "").toLowerCase();
-      const descEn = (c.descriptionEn || c.description || "").toLowerCase();
-      const descAr = (c.descriptionAr || c.description || "").toLowerCase();
+      // البحث في العربي، الإنجليزي، ورمز المادة[cite: 8]
+      const nameEn = (c.nameEn || c.titleEn || c.title || "").toLowerCase();
+      const nameAr = (c.nameAr || c.titleAr || c.title || "").toLowerCase();
+      const code = (c.code || "").toLowerCase();
 
-      return (
-        titleEn.includes(qLower) ||
-        titleAr.includes(qLower) ||
-        descEn.includes(qLower) ||
-        descAr.includes(qLower)
-      );
+      return nameEn.includes(qLower) || nameAr.includes(qLower) || code.includes(qLower);
     });
   }
 
@@ -83,7 +85,6 @@
 
     const isGlobalSearch = searchQuery.trim().length > 0;
     const courses = filterCourses(GeneZCourses.getCourses());
-    
     const lang = localStorage.getItem("gene_z_lang") || "ar";
 
     if (countEl) countEl.textContent = courses.length;
@@ -105,32 +106,38 @@
 
     grid.innerHTML = courses
       .map((course) => {
-        const rawTitle = lang === "en" ? (course.titleEn || course.title) : (course.titleAr || course.title);
-        const rawDesc = lang === "en" ? (course.descriptionEn || course.description) : (course.descriptionAr || course.description);
+        const title = escapeHtml(lang === "en" ? (course.nameEn || course.titleEn || course.title) : (course.nameAr || course.titleAr || course.title));
+        const code = escapeHtml(course.code || "");
         
-        const title = escapeHtml(rawTitle);
-        const desc = escapeHtml(rawDesc);
-        
-        const catObj = GeneZCourses.CATEGORIES[course.category];
-        const categoryLabel = escapeHtml(lang === "en" ? catObj.labelEn : catObj.labelAr);
+        const courseCat = course.type || course.category;
+        const catObj = GeneZCourses.CATEGORIES[courseCat];
+        const categoryLabel = escapeHtml(catObj ? (lang === "en" ? catObj.labelEn : catObj.labelAr) : "عام");
+
+        const filesCount = course.files ? course.files.length : (course.resources ? course.resources.length : 0);
+        const filesBadge = filesCount > 0 
+          ? `<span class="text-xs text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded font-semibold">📁 ${filesCount} ملفات</span>`
+          : `<span class="text-xs text-muted bg-surface-secondary px-2 py-0.5 rounded">لا توجد ملفات بعد</span>`;
 
         return `
       <article
-        class="card p-6 flex flex-col gap-3 course-card cursor-pointer hover:border-accent transition-colors group"
+        class="card p-5 flex flex-col justify-between gap-4 course-card cursor-pointer hover:border-accent hover:shadow-md transition-all group rounded-xl bg-surface"
         data-course-id="${course.id}"
         role="link"
         tabindex="0"
-        aria-label="${lang === "en" ? 'View details for' : 'عرض تفاصيل'} ${title}"
+        aria-label="عرض تفاصيل ${title}"
       >
-        <div>
-          <h3 class="text-lg font-semibold leading-snug group-hover:text-accent transition-colors">${title}</h3>
-          ${
-            isGlobalSearch
-              ? `<span class="inline-block px-2 py-1 bg-surface-secondary text-xs rounded border border-theme w-fit text-muted mt-2">${categoryLabel}</span>`
-              : ""
-          }
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-mono bg-accent/10 text-accent font-bold px-2 py-0.5 rounded text-xs">${code}</span>
+            ${isGlobalSearch ? `<span class="text-[11px] bg-surface-secondary px-2 py-0.5 rounded text-muted border border-theme">${categoryLabel}</span>` : ""}
+          </div>
+          <h3 class="text-base font-bold leading-snug group-hover:text-accent transition-colors pt-1">${title}</h3>
         </div>
-        <p class="text-sm text-muted leading-relaxed line-clamp-3 mt-1">${desc}</p>
+        
+        <div class="pt-3 border-t border-theme flex justify-between items-center">
+          ${filesBadge}
+          <span class="text-xs font-bold text-accent group-hover:translate-x-[-4px] transition-transform rtl:inline-block">عرض التفاصيل &larr;</span>
+        </div>
       </article>`;
       })
       .join("");
@@ -160,10 +167,7 @@
     renderCourses();
     initSearch();
 
-    window.addEventListener("genez:courses-updated", () => {
-      renderCourses();
-    });
-
+    window.addEventListener("genez:courses-updated", () => renderCourses());
     window.addEventListener("genez:lang-changed", () => {
       renderTabs();
       renderCourses();

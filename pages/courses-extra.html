@@ -22,12 +22,14 @@
   <main class="flex-1 py-12 sm:py-16">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <div class="mb-10 text-center md:text-start">
-        <h1 class="text-3xl sm:text-4xl font-bold mb-3 text-accent transition-colors duration-300" data-en="Additional Courses and Training">الدورات والتدريب الإضافي</h1>
-        <p class="text-muted max-w-2xl" data-en="Develop your skills through a range of recommended courses, whether specialized in the field or soft skills.">
-          طور مهاراتك من خلال مجموعة من الدورات الموصى بها، سواء كانت متخصصة في المجال أو المهارات الناعمة.
-        </p>
+      <div class="mb-10 text-center md:text-start flex items-center gap-3 justify-center md:justify-start">
+        <span class="text-4xl">🎓</span>
+        <h1 class="text-3xl sm:text-4xl font-bold text-accent transition-colors duration-300" data-en="Additional Courses and Training">الدورات والتدريب الإضافي</h1>
       </div>
+      
+      <p class="text-muted max-w-2xl mb-8 text-center md:text-start" data-en="Develop your skills through a range of recommended courses, whether specialized in the field or soft skills.">
+        طور مهاراتك من خلال مجموعة من الدورات الموصى بها، والتدريبات التي تدعم مسيرتك المهنية والأكاديمية.
+      </p>
 
       <div class="mb-10">
         <label for="extra-search" class="form-label mb-2 block font-semibold text-accent" data-en="Search Courses">البحث في الدورات</label>
@@ -35,14 +37,19 @@
           type="search"
           id="extra-search"
           class="form-input w-full p-4 rounded-xl border border-theme bg-surface focus:border-accent outline-none transition-colors shadow-sm"
-          placeholder="ابحث عن اسم الدورة أو نوعها..."
+          placeholder="ابحث عن اسم الدورة أو محتواها..."
           autocomplete="off"
-          data-en="Search for a course name or type..."
+          data-en="Search for a course name or content..."
         />
       </div>
 
+      <!-- شبكة عرض الدورات -->
       <div id="extra-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        </div>
+         <div class="col-span-full flex flex-col items-center justify-center py-10">
+            <div class="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p class="text-sm font-semibold text-muted" data-en="Loading courses...">جاري تحميل الدورات...</p>
+         </div>
+      </div>
 
     </div>
   </main>

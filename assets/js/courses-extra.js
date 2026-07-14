@@ -1,125 +1,128 @@
 /**
- * Gene_Z Extra Courses Page Logic
+ * Gene_Z Extra Courses Page Logic (Student View)
  */
 (function () {
-  const STORAGE_KEY = "gene_z_extra_courses";
-  
-  // بيانات تجريبية بناءً على التصميم المطلوب
-  const DUMMY_COURSES = [
-    {
-      id: "ext_001",
-      title: "بايثون للمعلوماتية الحيوية",
-      type: "خاصة بالتخصص",
-      hours: "15 ساعة",
-      date: "20 آب 2026", // تاريخ للدورات الأونلاين
-      url: "https://www.coursera.org", // الرابط اللي بتوجه عليه البطاقة
-      badges: ["certificate", "online"] // أخضر وأزرق
-    },
-    {
-      id: "ext_002",
-      title: "تقنية كريسبر",
-      type: "خاص بالتخصص",
-      hours: "5 ساعات",
-      date: "", // فاضي لأنها مسجلة وما إلها تاريخ محدد
-      url: "https://youtu.be/QsnkkP3jPDk?si=oAetLLAkhDe1z4Os",
-      badges: ["no-certificate", "recorded"] // أحمر وأصفر
-    },
-    {
-      id: "ext_003",
-      title: "أساسيات السلامة المخبرية",
-      type: "خاصة بالتخصص",
-      hours: "3 ساعات",
-      date: "",
-      url: "https://www.futurelearn.com",
-      badges: ["certificate", "recorded"] // أخضر وأصفر
-    },
-    {
-      id: "ext_004",
-      title: "إدارة الوقت للطلبة",
-      type: "مهارات ناعمة",
-      hours: "ساعتان",
-      date: "1 أيلول 2026",
-      url: "https://www.udemy.com",
-      badges: ["no-certificate", "online"] // أحمر وأزرق
-    }
-  ];
+  const STORAGE_KEY = "genez_extra_courses";
 
-  // إعدادات الألوان والنصوص للشارات (Badges)
-  const BADGE_CONFIG = {
-    "certificate": { label: "مع شهادة", classes: "bg-green-100 text-green-800 border-green-200" },
-    "no-certificate": { label: "بدون شهادة", classes: "bg-red-100 text-red-800 border-red-200" },
-    "online": { label: "أونلاين", classes: "bg-blue-100 text-blue-800 border-blue-200" },
-    "recorded": { label: "مسجلة", classes: "bg-yellow-100 text-yellow-800 border-yellow-200" }
-  };
+  // دالة تحويل الروابط النصية إلى روابط قابلة للضغط (مع إيقاف انتشار الحدث لكي لا تتضارب مع البطاقة)
+  function linkify(text) {
+    if (!text) return "";
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, function(url) {
+      return `<a href="${url}" target="_blank" class="text-blue-500 hover:text-blue-700 underline font-bold transition-colors" dir="ltr" onclick="event.stopPropagation()">${url}</a>`;
+    });
+  }
 
   function getCourses() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DUMMY_COURSES));
-      return DUMMY_COURSES;
-    }
-    return JSON.parse(stored);
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   }
+
+  // إعدادات الشارات (الألوان والنصوص باللغتين)
+  const BADGE_CONFIG = {
+    "with-cert": { 
+      ar: "مع شهادة", en: "With Certificate", 
+      classes: "bg-green-100 text-green-800 border-green-200" 
+    },
+    "no-cert": { 
+      ar: "بدون شهادة", en: "No Certificate", 
+      classes: "bg-red-100 text-red-800 border-red-200" 
+    },
+    "online": { 
+      ar: "أونلاين", en: "Online", 
+      classes: "bg-blue-100 text-blue-800 border-blue-200" 
+    },
+    "recorded": { 
+      ar: "مسجلة", en: "Recorded", 
+      classes: "bg-yellow-100 text-yellow-800 border-yellow-200" 
+    }
+  };
 
   function renderGrid(searchQuery = "") {
     const grid = document.getElementById("extra-grid");
     if (!grid) return;
 
     const courses = getCourses();
+    const currentLang = document.documentElement.getAttribute("lang") === "en" ? "en" : "ar";
     const q = searchQuery.toLowerCase().trim();
-    const filtered = courses.filter(c => 
-      c.title.toLowerCase().includes(q) || 
-      c.type.toLowerCase().includes(q)
-    );
+    const hoursLabel = currentLang === "en" ? "Hours" : "ساعات";
+    
+    const filtered = courses.filter(c => {
+      const title = currentLang === "en" ? (c.titleEn || c.titleAr) : (c.titleAr || c.titleEn);
+      const content = currentLang === "en" ? (c.contentEn || c.contentAr) : (c.contentAr || c.contentEn);
+      return title.toLowerCase().includes(q) || content.toLowerCase().includes(q);
+    });
 
     if (filtered.length === 0) {
-      grid.innerHTML = `<p class="col-span-full text-center text-muted p-8 card border-dashed border-2">لا توجد دورات مطابقة للبحث.</p>`;
+      grid.innerHTML = `<p class="col-span-full text-center text-muted p-12 card border-dashed border-2 border-theme rounded-2xl">${currentLang === "en" ? "No courses found matching your search." : "لا توجد دورات مطابقة للبحث."}</p>`;
       return;
     }
 
-    grid.innerHTML = filtered.map(course => {
-      // تجهيز الشارات (Badges)
-      const badgesHtml = course.badges.map(bKey => {
-        const conf = BADGE_CONFIG[bKey];
-        return `<span class="px-2 py-1 text-xs font-bold rounded-full border ${conf.classes}">${conf.label}</span>`;
-      }).join("");
+    // ترتيب الدورات الأحدث أولاً
+    filtered.sort((a, b) => b.id - a.id);
 
-      // إظهار التاريخ فقط إذا كان موجوداً
-      const dateHtml = course.date ? `
-        <div class="flex items-center gap-1 text-xs font-medium text-accent bg-surface px-2 py-1 rounded-md border border-theme">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-          ${course.date}
+    grid.innerHTML = filtered.map(course => {
+      const title = currentLang === "en" ? (course.titleEn || course.titleAr) : (course.titleAr || course.titleEn);
+      let content = currentLang === "en" ? (course.contentEn || course.contentAr) : (course.contentAr || course.contentEn);
+      
+      // تحويل الروابط في الوصف إلى Clickable Links
+      content = linkify(content);
+
+      // تجهيز الشارات (الشهادة والنوع)
+      const certConf = BADGE_CONFIG[course.certBadge || 'with-cert'];
+      const typeConf = BADGE_CONFIG[course.typeBadge || 'recorded'];
+
+      const badgesHtml = `
+        <span class="px-2.5 py-1 text-[11px] font-bold rounded-full border shadow-sm ${certConf.classes}">${certConf[currentLang]}</span>
+        <span class="px-2.5 py-1 text-[11px] font-bold rounded-full border shadow-sm ${typeConf.classes}">${typeConf[currentLang]}</span>
+      `;
+
+      // إظهار التاريخ فقط إذا كانت الدورة "أونلاين"
+      const dateHtml = (course.typeBadge === 'online' && course.startDate) ? `
+        <div class="flex items-center gap-1.5 text-xs font-bold text-accent bg-surface px-2.5 py-1.5 rounded-lg border border-theme shadow-sm">
+          <span>📅</span> <span dir="ltr">${course.startDate}</span>
         </div>
-      ` : `<div></div>`; // ديف فاضي عشان يحافظ على التنسيق
+      ` : `<div></div>`;
 
       return `
-      <a href="${course.url}" target="_blank" class="card p-6 block hover:shadow-lg hover:border-accent transition-all duration-300 group">
+      <!-- جعلنا البطاقة div بميزة onclick تفتح رابط الدورة (url) -->
+      <div onclick="window.open('${course.url || '#'}', '_blank')" class="card p-6 flex flex-col justify-between hover:shadow-xl hover:border-accent transition-all duration-300 group cursor-pointer bg-surface-secondary border border-theme rounded-2xl h-full">
         
-        <div class="flex gap-2 mb-4">
+        <div class="flex gap-2 mb-4 justify-end flex-wrap">
           ${badgesHtml}
         </div>
 
-        <h3 class="text-xl font-bold group-hover:text-accent transition-colors leading-snug mb-1">${course.title}</h3>
-        <p class="text-sm font-medium text-muted mb-6">${course.type}</p>
+        <div class="mb-4">
+          <h3 class="text-xl font-bold group-hover:text-accent transition-colors leading-snug mb-3">${title}</h3>
+          <!-- الوصف بستايل يحافظ على المسافات -->
+          <p class="text-sm font-medium text-muted leading-relaxed whitespace-pre-line" style="word-break: break-word;">${content}</p>
+        </div>
 
-        <div class="flex justify-between items-end border-t border-theme pt-4 mt-auto">
-          <div class="flex items-center gap-1 text-sm font-bold text-muted">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            ${course.hours}
+        <div class="flex justify-between items-center border-t border-theme pt-4 mt-auto">
+          <div class="flex items-center gap-1.5 text-sm font-bold text-muted bg-surface px-3 py-1.5 rounded-lg border border-theme shadow-sm">
+            <span>⏱️</span>
+            <span dir="ltr">${course.hours}</span>
+            <span>${hoursLabel}</span>
           </div>
           ${dateHtml}
         </div>
 
-      </a>
+      </div>
     `;
     }).join("");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("extra-search");
-    if (searchInput) {
+    if (document.getElementById("extra-grid")) {
       renderGrid();
-      searchInput.addEventListener("input", (e) => renderGrid(e.target.value));
+      
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => renderGrid(e.target.value));
+      }
+
+      window.addEventListener("genez:lang-changed", () => {
+        renderGrid(searchInput ? searchInput.value : "");
+      });
     }
   });
 

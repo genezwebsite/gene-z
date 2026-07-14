@@ -1,109 +1,72 @@
 /**
  * Gene_Z Courses Data Layer
  * -----------------------------------------------
- * PUBLIC users read from localStorage (seeded with defaults).
- * ADMIN panel writes via saveCourses() — no source-code edits needed.
- *
- * Backend-ready: replace getCourses/saveCourses with fetch() to your API.
+ * يدعم الأقسام الأربعة الرسمية للمتطلبات، ويتصل بلوحة التحكم.
  */
 (function () {
-  const STORAGE_KEY = "gene_z_courses";
+  // مفاتيح التخزين الموحدة مع لوحة التحكم
+  const STORAGE_KEY = "genez_courses_data";
+  const STUDY_PLAN_KEY = "genez_study_plan";
 
   const CATEGORIES = {
-    "dept-mandatory": {
-      id: "dept-mandatory",
-      labelEn: "Department Mandatory",
-      labelAr: "مواد تخصص اجبارية",
+    "major-req": {
+      id: "major-req",
+      labelEn: "Major Mandatory",
+      labelAr: "متطلبات تخصص اجبارية",
     },
-    "dept-elective": {
-      id: "dept-elective",
-      labelEn: "Department Elective",
-      labelAr: "مواد تخصص اختيارية",
+    "major-opt": {
+      id: "major-opt",
+      labelEn: "Major Elective",
+      labelAr: "متطلبات تخصص اختيارية",
     },
-    "college-mandatory": {
-      id: "college-mandatory",
+    "college-req": {
+      id: "college-req",
       labelEn: "College Mandatory",
       labelAr: "متطلبات كلية اجبارية",
     },
-    "college-elective": {
-      id: "college-elective",
+    "college-opt": {
+      id: "college-opt",
       labelEn: "College Elective",
       labelAr: "متطلبات كلية اختيارية",
     },
   };
 
-  /* Seed data — copied to localStorage on first visit */
+  /* بيانات مبدئية في حال كان الموقع يفتح لأول مرة */
   const DEFAULT_COURSES = [
     {
-      id: "bio101",
-      title: "Introduction to Biotechnology",
-      titleAr: "مقدمة في التقنية الحيوية",
-      category: "dept-mandatory",
-      description: "Foundational principles of molecular biology, genetics, and lab safety.",
-      descriptionAr: "مبادئ أساسية في علم الأحياء الجزيئي والوراثة وسلامة المختبر.",
-      resources: [
+      id: 1700000000001,
+      nameAr: "مقدمة في التكنولوجيا الحيوية",
+      nameEn: "Introduction to Biotechnology",
+      code: "BIOT-101",
+      type: "major-req",
+      files: [
         {
-          id: "r1",
-          type: "link",
-          name: "Course Syllabus (PDF)",
-          url: "https://example.com/syllabus-bio101.pdf",
-        },
-        {
-          id: "r2",
-          type: "video",
-          name: "Lab Safety Overview",
-          url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        },
-      ],
+          id: "f1",
+          name: "سلايدات الشابتر الأول",
+          url: "https://example.com/slide1.pdf",
+          downloadUrl: "https://example.com/slide1.pdf",
+          sectionKey: "chapters",
+          sectionName: "شباتر المادة",
+          contributor: "د. أحمد"
+        }
+      ]
     },
     {
-      id: "gen202",
-      title: "Genomics & Bioinformatics",
-      titleAr: "الجينوميات والمعلوماتية الحيوية",
-      category: "dept-mandatory",
-      description: "Sequence analysis, databases, and computational tools for genomic data.",
-      descriptionAr: "تحليل التسلسلات وقواعد البيانات والأدوات الحاسوبية للبيانات الجينومية.",
-      resources: [
-        {
-          id: "r3",
-          type: "link",
-          name: "NCBI Resources",
-          url: "https://www.ncbi.nlm.nih.gov/",
-        },
-      ],
-    },
-    {
-      id: "ele301",
-      title: "CRISPR Applications",
-      titleAr: "تطبيقات CRISPR",
-      category: "dept-elective",
-      description: "Gene editing techniques and ethical considerations in modern biotech.",
-      descriptionAr: "تقنيات تحرير الجينات والاعتبارات الأخلاقية في التقنية الحيوية الحديثة.",
-      resources: [],
-    },
-    {
-      id: "col101",
-      title: "Academic Writing",
-      titleAr: "الكتابة الأكاديمية",
-      category: "college-mandatory",
-      description: "Scientific communication, citation standards, and research ethics.",
-      descriptionAr: "التواصل العلمي ومعايير الاقتباس وأخلاقيات البحث.",
-      resources: [],
-    },
-    {
-      id: "col201",
-      title: "Innovation & Entrepreneurship",
-      titleAr: "الابتكار وريادة الأعمال",
-      category: "college-elective",
-      description: "Translating biotech research into viable products and startups.",
-      descriptionAr: "تحويل أبحاث التقنية الحيوية إلى منتجات viable وشركات ناشئة.",
-      resources: [],
-    },
+      id: 1700000000002,
+      nameAr: "الجينوميات والمعلوماتية الحيوية",
+      nameEn: "Genomics & Bioinformatics",
+      code: "BIOT-202",
+      type: "major-req",
+      files: []
+    }
   ];
 
   function seedIfEmpty() {
     if (!localStorage.getItem(STORAGE_KEY)) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_COURSES));
+    }
+    if (!localStorage.getItem(STUDY_PLAN_KEY)) {
+      localStorage.setItem(STUDY_PLAN_KEY, JSON.stringify({ tree: null, table: null }));
     }
   }
 
@@ -118,21 +81,25 @@
 
   function saveCourses(courses) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-    /* Dispatch event so courses.html re-renders if open in another tab */
     window.dispatchEvent(new CustomEvent("genez:courses-updated"));
   }
 
-  function generateId(prefix) {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  function getStudyPlan() {
+    seedIfEmpty();
+    try {
+      return JSON.parse(localStorage.getItem(STUDY_PLAN_KEY)) || { tree: null, table: null };
+    } catch {
+      return { tree: null, table: null };
+    }
   }
 
   window.GeneZCourses = {
     STORAGE_KEY,
+    STUDY_PLAN_KEY,
     CATEGORIES,
-    DEFAULT_COURSES,
     getCourses,
     saveCourses,
-    generateId,
+    getStudyPlan,
     seedIfEmpty,
   };
 })();

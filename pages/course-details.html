@@ -15,6 +15,12 @@
 
   <style>
     body { font-family: 'Noto Kufi Arabic', sans-serif; }
+    /* تنسيق التبويبات */
+    .file-tab.active {
+      color: var(--color-accent);
+      border-bottom-color: var(--color-accent);
+      border-bottom-width: 2px;
+    }
   </style>
 </head>
 <body class="flex flex-col min-h-screen bg-surface text-content transition-colors duration-300">
@@ -22,16 +28,27 @@
   <div id="site-header"></div>
   <div id="site-navbar"></div>
 
-  <main class="flex-1 py-12 sm:py-16">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <main class="flex-1 py-10 sm:py-14">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <a href="courses.html" class="inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors mb-8 font-medium">
-        <span>&rarr;</span> العودة للمواد
+      <!-- زر العودة -->
+      <a href="courses.html" class="inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors mb-6 font-semibold">
+        <span>&rarr;</span> العودة لصفحة المواد
       </a>
 
-      <div id="course-content" class="card p-6 sm:p-10 mb-8 min-h-[40vh] relative">
-        <div class="flex justify-center items-center h-full">
-          <span class="text-muted">جاري تحميل البيانات...</span>
+      <!-- التنويه التحذيري -->
+      <div class="mb-8 p-4 bg-amber-50 border-r-4 border-amber-500 rounded-lg text-amber-900 shadow-sm flex items-start gap-3">
+        <span class="text-xl">⚠️</span>
+        <div class="text-xs sm:text-sm leading-relaxed font-medium">
+          <strong>تنويه هام من فريق Gene_Z:</strong> 
+          هذه الشباتر والملخصات للاطلاع والمساعدة الدراسية، حيث من الممكن أن يتم تعديلها من قبل أستاذ أو مسؤول المادة في الجامعة. يمكنك الرجوع إليه دائماً للحصول على النسخة الرسمية.
+        </div>
+      </div>
+
+      <!-- الحاوية الرئيسية لتفاصيل المادة -->
+      <div id="course-content" class="min-h-[40vh] relative">
+        <div class="card p-10 flex justify-center items-center h-full">
+          <span class="text-muted font-semibold">جاري تحميل بيانات المادة...</span>
         </div>
       </div>
 
@@ -46,76 +63,121 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const container = document.getElementById("course-content");
-      
-      // جلب الـ ID الخاص بالمادة من الرابط (مثال: ?id=bio101)
       const urlParams = new URLSearchParams(window.location.search);
       const courseId = urlParams.get("id");
 
       if (!courseId || !window.GeneZCourses) {
-        showError("لم يتم العثور على المادة المطلوبة.");
-        return;
+        showError("لم يتم العثور على المادة المطلوبة."); return;
       }
 
-      // البحث عن المادة في قاعدة البيانات (localStorage)
       const courses = GeneZCourses.getCourses();
-      const course = courses.find(c => c.id === courseId);
+      const course = courses.find(c => String(c.id) === String(courseId));
 
       if (!course) {
-        showError("هذه المادة غير موجودة أو تم حذفها.");
-        return;
+        showError("هذه المادة غير موجودة في السجل أو تم حذفها."); return;
       }
 
       renderCourseDetails(course);
 
       function showError(message) {
         container.innerHTML = `
-          <div class="text-center py-12">
-            <p class="text-xl font-bold text-red-500 mb-2">خطأ!</p>
-            <p class="text-muted">${message}</p>
-            <a href="courses.html" class="btn-primary mt-6 inline-block">تصفح المواد</a>
+          <div class="card p-10 text-center py-12">
+            <p class="text-2xl font-bold text-red-500 mb-2">خطأ!</p>
+            <p class="text-muted text-sm mb-6">${message}</p>
+            <a href="courses.html" class="btn-primary inline-block px-6 py-2.5 rounded font-semibold text-sm">تصفح جميع المواد</a>
           </div>`;
       }
 
-      function renderCourseDetails(course) {
-        // نعتمد الأسماء العربية إذا كانت موجودة
-        const title = course.titleAr || course.title;
-        const description = course.descriptionAr || course.description;
-        const catObj = GeneZCourses.CATEGORIES[course.category];
-        const categoryLabel = catObj ? catObj.labelAr : "تصنيف غير معروف";
-        const resources = course.resources || [];
-
-        let resourcesHTML = "";
+      function createFileCard(file) {
+        const contributor = file.contributor || "فريق Gene_Z";
+        const viewUrl = file.url || "#";
+        const downUrl = file.downloadUrl || file.url || "#";
         
-        if (resources.length === 0) {
-          resourcesHTML = `<p class="text-sm text-muted italic bg-surface-secondary p-4 rounded-lg border border-theme text-center">لا يوجد ملفات أو شروحات مرفقة لهذه المادة حالياً.</p>`;
-        } else {
-          resourcesHTML = `<div class="grid gap-3 sm:grid-cols-2">` + resources.map(res => {
-            const icon = res.type === 'video' ? '▶️' : '📄';
-            return `
-              <a href="${res.url}" target="_blank" class="flex items-center gap-3 p-4 rounded-lg border border-theme hover:border-accent hover:shadow-sm transition-all bg-surface group">
-                <span class="text-xl">${icon}</span>
-                <span class="font-medium text-sm group-hover:text-accent transition-colors">${res.name}</span>
-              </a>
-            `;
-          }).join('') + `</div>`;
-        }
-
-        container.innerHTML = `
-          <header class="mb-8 border-b border-theme pb-6">
-            <span class="inline-block px-3 py-1 bg-surface-secondary text-xs rounded-full border border-theme text-muted mb-4 font-medium">
-              ${categoryLabel}
-            </span>
-            <h1 class="text-3xl font-bold text-accent mb-4">${title}</h1>
-            <p class="text-muted leading-relaxed">${description}</p>
-          </header>
-
-          <section>
-            <h2 class="text-xl font-bold text-content mb-4 flex items-center gap-2">
-              <span>📚</span> ملفات الشرح والمصادر
-            </h2>
-            ${resourcesHTML}
-          </section>
+        return `
+          <div class="p-4 rounded-xl border border-theme bg-surface hover:border-accent hover:shadow-md transition-all flex flex-col justify-between gap-3 group">
+            <div class="space-y-1.5">
+              <span class="inline-block px-2 py-0.5 rounded bg-accent/10 text-accent font-bold text-[11px]">👤 مساهمة: ${contributor}</span>
+              <h4 class="font-bold text-sm text-content group-hover:text-accent transition-colors leading-snug" title="${file.name}">📄 ${file.name}</h4>
+            </div>
+            <div class="flex gap-2 pt-2 border-t border-theme">
+              <a href="${viewUrl}" target="_blank" class="btn-outline flex-1 text-center py-1.5 text-xs rounded font-semibold text-blue-600 border-blue-200 hover:bg-blue-50">👁️ معاينة</a>
+              <a href="${downUrl}" target="_blank" download class="btn-primary flex-1 text-center py-1.5 text-xs rounded font-semibold">⬇️ تنزيل</a>
+            </div>
+          </div>
         `;
+      }
+
+      function renderCourseDetails(course) {
+        const titleAr = course.nameAr || course.titleAr || course.title;
+        const titleEn = course.nameEn || course.titleEn || "";
+        const code = course.code || "BIOT";
+        const courseCat = course.type || course.category;
+        const catObj = GeneZCourses.CATEGORIES[courseCat];
+        const categoryLabel = catObj ? catObj.labelAr : "متطلب عام";
+        
+        const files = course.files || course.resources || [];
+        const chapters = files.filter(f => f.sectionKey === 'chapters' || !f.sectionKey);
+        const summaries = files.filter(f => f.sectionKey === 'summaries');
+        const pastPapers = files.filter(f => f.sectionKey === 'pastPapers');
+
+        const noFilesHTML = `<div class="col-span-full text-center py-8"><p class="text-sm text-muted font-medium bg-surface-secondary p-4 rounded-lg border border-theme inline-block">لا توجد ملفات مرفوعة في هذا القسم حالياً.</p></div>`;
+
+        // دمج الهيدر والتبويبات
+        container.innerHTML = `
+          <!-- هيدر المادة -->
+          <div class="card p-6 sm:p-8 mb-6 bg-surface shadow-sm border-theme border-b-4 border-b-accent">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+              <span class="font-mono bg-accent text-white font-bold px-3 py-1 rounded text-sm">${code}</span>
+              <span class="text-xs font-semibold bg-surface-secondary px-3 py-1 rounded border border-theme text-muted">${categoryLabel}</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-content mb-1">${titleAr}</h1>
+            ${titleEn ? `<p class="text-sm text-muted font-mono" dir="ltr">${titleEn}</p>` : ""}
+          </div>
+
+          <!-- نظام التبويبات للأقسام -->
+          <div class="mb-6 border-b border-theme flex flex-wrap gap-2" id="course-file-tabs">
+            <button type="button" class="file-tab active px-4 py-2 text-sm font-bold transition-colors" data-target="chapters-sec">📖 شباتر المادة (${chapters.length})</button>
+            <button type="button" class="file-tab px-4 py-2 text-sm font-bold text-muted hover:text-content transition-colors" data-target="summaries-sec">📝 ملخصات وشروحات (${summaries.length})</button>
+            <button type="button" class="file-tab px-4 py-2 text-sm font-bold text-muted hover:text-content transition-colors" data-target="pastpapers-sec">📑 أسئلة سنوات (${pastPapers.length})</button>
+          </div>
+
+          <!-- صناديق الملفات -->
+          <div id="chapters-sec" class="file-section block">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${chapters.length > 0 ? chapters.map(createFileCard).join('') : noFilesHTML}
+            </div>
+          </div>
+
+          <div id="summaries-sec" class="file-section hidden">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${summaries.length > 0 ? summaries.map(createFileCard).join('') : noFilesHTML}
+            </div>
+          </div>
+
+          <div id="pastpapers-sec" class="file-section hidden">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${pastPapers.length > 0 ? pastPapers.map(createFileCard).join('') : noFilesHTML}
+            </div>
+          </div>
+        `;
+
+        // برمجة التبديل بين التبويبات (Tabs Logic)
+        const tabs = container.querySelectorAll('.file-tab');
+        const sections = container.querySelectorAll('.file-section');
+
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            tabs.forEach(t => {
+              t.classList.remove('active', 'text-accent');
+              t.classList.add('text-muted');
+            });
+            tab.classList.remove('text-muted');
+            tab.classList.add('active', 'text-accent');
+
+            sections.forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(tab.getAttribute('data-target')).classList.remove('hidden');
+          });
+        });
       }
     });
   </script>

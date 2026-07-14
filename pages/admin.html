@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة التحكم — Gene-Z</title>
+  <title>لوحة التحكم — Gene_Z</title>
   <meta name="robots" content="noindex, nofollow" />
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,35 +12,34 @@
   <script src="../assets/js/theme.js"></script>
   
   <style>
-    body { font-family: 'Noto Kufi Arabic', sans-serif !important; background-color: var(--color-surface-secondary); }
-    .admin-sidebar { min-height: calc(100vh - 4rem); }
+    body { font-family: 'Noto Kufi Arabic', sans-serif !important; }
     .admin-tab.active { background-color: var(--color-accent); color: white; border-color: var(--color-accent); }
   </style>
 </head>
-<body class="text-content transition-colors duration-300">
+<body class="flex flex-col min-h-screen bg-surface text-content transition-colors duration-300">
 
   <!-- بوابة تسجيل الدخول -->
   <section id="admin-gate" class="fixed inset-0 z-50 bg-surface flex items-center justify-center">
-    <div class="card p-8 sm:p-10 w-full max-w-md mx-4 shadow-2xl border-t-4 border-accent">
+    <div class="card p-8 sm:p-10 w-full max-w-md mx-4 shadow-2xl border-t-4 border-accent bg-surface">
       <div class="text-center mb-8">
         <div class="w-16 h-16 rounded-full bg-surface-secondary border-2 border-theme mx-auto flex items-center justify-center mb-4 overflow-hidden">
-          <img src="../assets/img/logo.jpeg" alt="Gene-Z Logo" class="w-full h-full object-cover">
+          <img src="../assets/img/logo.jpeg" alt="Gene_Z Logo" class="w-full h-full object-cover">
         </div>
         <h1 class="text-2xl font-bold text-accent mb-2">بوابة المشرفين</h1>
-        <p class="text-sm text-muted">فريق Gene-Z للتكنولوجيا الحيوية</p>
+        <p class="text-sm text-muted">فريق Gene_Z للتكنولوجيا الحيوية</p>
       </div>
 
       <form id="login-form" class="space-y-5">
         <div>
-          <label class="form-label block mb-2 font-semibold" for="login-email">البريد الإلكتروني</label>
-          <input type="email" id="login-email" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left" dir="ltr" required />
+          <label class="form-label block mb-2 font-semibold text-xs" for="login-email">البريد الإلكتروني</label>
+          <input type="email" id="login-email" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left text-sm" dir="ltr" required autocomplete="email" />
         </div>
         <div>
-          <label class="form-label block mb-2 font-semibold" for="login-password">كلمة المرور</label>
-          <input type="password" id="login-password" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left" dir="ltr" required />
+          <label class="form-label block mb-2 font-semibold text-xs" for="login-password">كلمة المرور</label>
+          <input type="password" id="login-password" class="form-input w-full p-3 rounded-lg border border-theme bg-surface text-left text-sm" dir="ltr" required autocomplete="new-password" />
         </div>
-        <p id="login-error" class="hidden text-sm text-red-600 font-medium bg-red-50 p-2 rounded">بيانات الدخول غير صحيحة.</p>
-        <button type="submit" class="btn-primary w-full py-3 text-lg mt-2">تسجيل الدخول</button>
+        <p id="login-error" class="hidden text-xs text-red-600 font-medium bg-red-50 p-2 rounded">بيانات الدخول غير صحيحة.</p>
+        <button type="submit" class="btn-primary w-full py-3 text-base font-semibold mt-2 rounded-lg">تسجيل الدخول</button>
       </form>
     </div>
   </section>
@@ -48,97 +47,410 @@
   <!-- لوحة التحكم الرئيسية -->
   <div id="admin-panel" class="hidden min-h-screen flex flex-col">
     
+    <!-- الهيدر مع زر قائمة الموبايل -->
     <header class="bg-surface border-b border-theme shadow-sm sticky top-0 z-40">
       <div class="px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
-          <span class="font-bold text-xl text-accent">Gene-Z Admin</span>
-          <span id="admin-role-badge" class="text-xs px-3 py-1 rounded-full bg-accent text-white hidden sm:block">جاري التحقق...</span>
+          <button type="button" id="mobile-menu-btn" class="md:hidden p-2 text-content hover:text-accent focus:outline-none" aria-label="فتح القائمة">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <span class="font-bold text-xl text-accent">Gene_Z Admin</span>
+          <span id="admin-role-badge" class="text-xs px-3 py-1 rounded-full bg-accent text-white hidden sm:block">مشرف</span>
         </div>
         <div class="flex items-center gap-4">
           <span class="text-sm font-semibold text-muted hidden sm:block" id="admin-welcome-name">مرحباً</span>
           <button type="button" data-theme-toggle class="theme-toggle shadow-sm" aria-label="تبديل الوضع"></button>
-          <button type="button" id="logout-btn" class="btn-outline text-sm py-1.5 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">تسجيل الخروج</button>
+          <button type="button" id="logout-btn" class="btn-outline text-xs py-1.5 px-3 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded">تسجيل الخروج</button>
         </div>
       </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden relative">
       
-      <aside class="w-64 bg-surface border-l border-theme admin-sidebar hidden md:block overflow-y-auto p-4">
-        <p class="text-xs font-bold text-muted uppercase tracking-wider mb-4 px-2">إدارة الأقسام</p>
-        <nav class="space-y-2">
+      <div id="mobile-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+      <aside id="sidebar-nav" class="fixed md:static inset-y-0 right-0 z-40 w-64 bg-surface border-l border-theme overflow-y-auto p-4 transform translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl md:shadow-none min-h-[calc(100vh-4rem)]">
+        <div class="flex justify-between items-center mb-4 px-2 md:hidden">
+          <span class="font-bold text-sm text-accent">أقسام المشرفين</span>
+          <button type="button" id="close-mobile-menu" class="text-muted hover:text-red-500 font-bold text-lg">✕</button>
+        </div>
+        <p class="text-xs font-bold text-muted uppercase tracking-wider mb-4 px-2 hidden md:block">إدارة الأقسام</p>
+        <nav class="space-y-2 text-sm">
           <button class="admin-tab active w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all" data-target="dashboard-section">📊 الإحصائيات العامة</button>
-          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="courses-section">📚 المواد الدراسية</button>
-          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="genomedia-section">📰 جينوميديا</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary flex items-center gap-2" data-target="updates-section"><span>🔔</span> أحدث الإعلانات والتحديثات</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="courses-section">📚 المواد الدراسية والخطة</button>
           <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="life-section">🧬 الربط مع الحياة</button>
+          <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="genomedia-section">📰 جينوميديا</button>
           <button class="admin-tab w-full text-right px-4 py-3 rounded-lg border border-transparent font-medium transition-all hover:bg-surface-secondary" data-target="extra-section">🎓 الدورات والتدريب</button>
         </nav>
       </aside>
 
-      <main class="flex-1 p-4 sm:p-8 overflow-y-auto">
+      <main class="flex-1 p-4 sm:p-8 overflow-y-auto w-full bg-surface-secondary/30">
         
+        <!-- قسم الإحصائيات -->
         <div id="dashboard-section" class="admin-section">
           <h2 class="text-2xl font-bold mb-6 text-accent">نظرة عامة وإحصائيات</h2>
           <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="card p-5 border-t-4 border-t-blue-500"><p class="text-sm text-muted mb-1">زيارات الموقع</p><p class="text-2xl font-bold">1,240</p></div>
-            <div class="card p-5 border-t-4 border-t-green-500"><p class="text-sm text-muted mb-1">المواد المحملة</p><p class="text-2xl font-bold">385</p></div>
-            <div class="card p-5 border-t-4 border-t-red-500"><p class="text-sm text-muted mb-1">إعجابات جينوميديا</p><p class="text-2xl font-bold">415</p></div>
-            <div class="card p-5 border-t-4 border-t-yellow-500"><p class="text-sm text-muted mb-1">نقرات الدورات</p><p class="text-2xl font-bold">89</p></div>
+            <div class="card p-5 border-t-4 border-t-blue-500 bg-surface"><p class="text-sm text-muted mb-1">زيارات الموقع</p><p class="text-2xl font-bold">1,240</p></div>
+            <div class="card p-5 border-t-4 border-t-green-500 bg-surface"><p class="text-sm text-muted mb-1">المواد المحملة</p><p class="text-2xl font-bold">385</p></div>
+            <div class="card p-5 border-t-4 border-t-red-500 bg-surface"><p class="text-sm text-muted mb-1">إعجابات جينوميديا</p><p class="text-2xl font-bold">415</p></div>
+            <div class="card p-5 border-t-4 border-t-yellow-500 bg-surface"><p class="text-sm text-muted mb-1">نقرات الدورات</p><p class="text-2xl font-bold">89</p></div>
           </div>
-          <div class="card p-6 h-64 flex items-center justify-center border-dashed border-2 border-theme">
-            <p class="text-muted">مساحة محجوزة للرسومات البيانية (Chart.js) التي سيتم ربطها بـ Firebase</p>
+          <div class="card p-6 h-64 flex items-center justify-center border-dashed border-2 border-theme bg-surface">
+            <p class="text-muted text-sm">مساحة محجوزة للرسومات البيانية (Chart.js) التي سيتم ربطها بـ Firebase</p>
           </div>
         </div>
 
-        <div id="courses-section" class="admin-section hidden">
-          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة المواد الدراسية</h2>
+        <!-- قسم الإعلانات والتحديثات -->
+        <!-- قسم الإعلانات والتحديثات -->
+        <div id="updates-section" class="admin-section hidden">
+          <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>🔔</span> إدارة أحدث الإعلانات والتحديثات</h2>
+          <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
+            <h3 class="text-base font-bold mb-4">إضافة إعلان جامعي جديد</h3>
+            <form id="update-form" class="space-y-4 text-xs" autocomplete="off">
+              <div class="grid sm:grid-cols-2 gap-4">
+                <input type="text" id="update-title" placeholder="عنوان الإعلان (عربي) - مثال: صدور جدول الميد" class="form-input w-full p-2.5 rounded border border-theme bg-surface" required autocomplete="off" />
+                <input type="text" id="update-title-en" placeholder="Title in English - e.g: Midterm Schedule Released" class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left" dir="ltr" required autocomplete="off" />
+              </div>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <textarea id="update-content" rows="3" placeholder="تفاصيل الإعلان بالعربي..." class="form-input w-full p-2.5 rounded border border-theme bg-surface" required></textarea>
+                <textarea id="update-content-en" rows="3" placeholder="Announcement details in English..." class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left" dir="ltr" required></textarea>
+              </div>
+              
+              <!-- حقل التصنيف وتاريخ الجدولة -->
+              <div class="grid sm:grid-cols-3 gap-4 items-center">
+                <div>
+                  <label class="block text-[11px] text-muted mb-1 font-semibold">تصنيف الإعلان:</label>
+                  <select id="update-tag" class="form-input w-full p-2.5 rounded border border-theme bg-surface">
+                    <option value="exams">🔴 اختبارات (Exams)</option>
+                    <option value="grades">🟢 علامات ونتائج (Grades)</option>
+                    <option value="general">🔵 إعلان عام (General)</option>
+                    <option value="events">🟡 أنشطة وفعاليات (Events)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] text-muted mb-1 font-semibold">تاريخ النشر (للجدولة):</label>
+                  <input type="date" id="update-schedule-date" class="form-input w-full p-2.5 rounded border border-theme bg-surface font-mono" required />
+                </div>
+                <div class="pt-5">
+                  <button type="submit" class="btn-primary w-full py-2.5 rounded font-semibold text-sm shadow-sm hover:opacity-95">نشر / جدولة الإعلان 🔔</button>
+                </div>
+              </div>
+            </form>
+          </div>
           
-          <!-- صندوق تجربة إنشاء المجلد -->
-          <div class="card p-6 border border-theme shadow-sm mb-6">
-            <h3 class="text-lg font-bold mb-4">تجربة إضافة مادة (إنشاء مجلد في درايف)</h3>
-            <div class="flex flex-col sm:flex-row gap-4">
-              <input type="text" id="test-folder-name" placeholder="اسم المادة (مثال: بيولوجيا جزيئية)" class="form-input flex-1 p-3 rounded-lg border border-theme bg-surface text-right focus:border-accent outline-none" />
-              <button id="test-create-folder-btn" class="btn-primary px-6 py-3 rounded-lg whitespace-nowrap transition-all">إنشاء المجلد</button>
-            </div>
-            
-            <!-- صندوق عرض النتيجة -->
-            <div id="test-result" class="mt-6 text-sm hidden p-4 rounded-lg bg-surface-secondary border border-green-200">
-              <!-- سيتم حقن النتيجة هنا عبر الجافاسكريبت -->
+          <div class="card p-6 border border-theme shadow-sm bg-surface">
+            <h3 class="text-base font-bold mb-4">الإعلانات المنشورة والمجدولة</h3>
+            <div id="updates-list" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- قسم المواد الدراسية والخطة -->
+        <div id="courses-section" class="admin-section hidden">
+          <h2 class="text-2xl font-bold mb-6 text-accent">📚 إدارة المواد الدراسية والخطة</h2>
+
+          <div class="card p-5 border border-theme shadow-sm mb-6 bg-surface">
+            <h3 class="text-base font-bold mb-3 text-accent flex items-center gap-2"><span>📌</span> ملفات الخطة الدراسية الرسمية</h3>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div class="p-3 bg-surface-secondary rounded border border-theme flex flex-col justify-between text-xs">
+                <div>
+                  <h4 class="font-bold mb-1">🌳 الخطة الشجرية (2024-2025)</h4>
+                  <p class="text-muted mb-2">الملف الحالي: <span id="tree-plan-name" class="font-mono text-accent">غير مرفوع</span></p>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-theme">
+                  <a id="tree-plan-view" href="#" target="_blank" class="btn-outline py-1 px-2.5 hidden">معاينة</a>
+                  <a id="tree-plan-download" href="#" target="_blank" class="btn-outline py-1 px-2.5 hidden">تنزيل</a>
+                  <label class="btn-primary py-1 px-2.5 cursor-pointer ml-auto"><span>تحديث</span><input type="file" id="upload-tree-plan" class="hidden" accept=".pdf,.png,.jpg" autocomplete="off" /></label>
+                </div>
+              </div>
+              <div class="p-3 bg-surface-secondary rounded border border-theme flex flex-col justify-between text-xs">
+                <div>
+                  <h4 class="font-bold mb-1">📑 جدول الخطة الدراسية (المتطلبات)</h4>
+                  <p class="text-muted mb-2">الملف الحالي: <span id="table-plan-name" class="font-mono text-accent">غير مرفوع</span></p>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-theme">
+                  <a id="table-plan-view" href="#" target="_blank" class="btn-outline py-1 px-2.5 hidden">معاينة</a>
+                  <a id="table-plan-download" href="#" target="_blank" class="btn-outline py-1 px-2.5 hidden">تنزيل</a>
+                  <label class="btn-primary py-1 px-2.5 cursor-pointer ml-auto"><span>تحديث</span><input type="file" id="upload-table-plan" class="hidden" accept=".pdf,.png,.jpg" autocomplete="off" /></label>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- الحاوية الخاصة بعرض الكورسات (مربوطة بكود الجافاسكريبت القديم) -->
-          <div id="admin-course-list" class="card p-4 border border-theme shadow-sm"></div>
+          <div class="card p-5 border border-theme shadow-sm mb-6 bg-surface">
+            <h3 class="text-base font-bold mb-3">➕ إضافة مادة دراسية جديدة</h3>
+            <form id="add-course-form" class="space-y-3 text-xs" autocomplete="off">
+              <div class="grid sm:grid-cols-3 gap-3">
+                <input type="text" id="course-name-ar" placeholder="اسم المادة بالعربي" class="form-input p-2 rounded border border-theme bg-surface text-xs" required autocomplete="off" />
+                <input type="text" id="course-name-en" placeholder="Course Name in English" class="form-input p-2 rounded border border-theme bg-surface text-left text-xs" dir="ltr" required autocomplete="off" />
+                <input type="text" id="course-code" placeholder="BIOT-201" class="form-input p-2 rounded border border-theme bg-surface font-mono text-left text-xs" dir="ltr" required autocomplete="off" />
+              </div>
+              <div class="grid sm:grid-cols-2 gap-3 items-center">
+                <select id="course-type" class="form-input p-2 rounded border border-theme bg-surface text-xs" autocomplete="off">
+                  <option value="major-req">متطلبات تخصص إجبارية</option>
+                  <option value="major-opt">متطلبات تخصص اختيارية</option>
+                  <option value="college-req">متطلبات كلية إجبارية</option>
+                  <option value="college-opt">متطلبات كلية اختيارية</option>
+                </select>
+                <button type="submit" id="save-course-btn" class="btn-primary py-2 rounded font-semibold text-xs">إنشاء المادة ومجلداتها السحابية 🚀</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card p-5 border border-theme shadow-sm mb-6 bg-surface">
+            <div class="space-y-3">
+              <input type="text" id="course-search-input" placeholder="ابحث باسم المادة أو رقمها (مثال: بيولوجيا أو BIOT)..." class="form-input w-full p-2.5 rounded-lg border border-theme bg-surface text-xs focus:border-accent outline-none" autocomplete="off" />
+              <div class="flex flex-wrap gap-2 border-t border-theme pt-3" id="course-category-tabs">
+                <button type="button" class="cat-tab active px-3 py-1.5 rounded-lg font-semibold text-xs bg-accent text-white transition-all" data-cat="all">جميع المواد</button>
+                <button type="button" class="cat-tab px-3 py-1.5 rounded-lg font-semibold text-xs bg-surface-secondary text-muted hover:text-content transition-all" data-cat="major-req">متطلبات تخصص إجبارية</button>
+                <button type="button" class="cat-tab px-3 py-1.5 rounded-lg font-semibold text-xs bg-surface-secondary text-muted hover:text-content transition-all" data-cat="major-opt">متطلبات تخصص اختيارية</button>
+                <button type="button" class="cat-tab px-3 py-1.5 rounded-lg font-semibold text-xs bg-surface-secondary text-muted hover:text-content transition-all" data-cat="college-req">متطلبات كلية إجبارية</button>
+                <button type="button" class="cat-tab px-3 py-1.5 rounded-lg font-semibold text-xs bg-surface-secondary text-muted hover:text-content transition-all" data-cat="college-opt">متطلبات كلية اختيارية</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-5 border border-theme shadow-sm bg-surface">
+            <h3 class="text-base font-bold mb-4 flex justify-between items-center">
+              <span>📖 المواد الدراسية المضافة</span>
+              <span id="courses-count-badge" class="text-xs bg-surface-secondary px-2 py-1 rounded text-muted font-mono">0 مادة</span>
+            </h3>
+            <div id="courses-admin-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
         </div>
 
+        <!-- قسم إدارة جينوميديا -->
         <div id="genomedia-section" class="admin-section hidden">
-          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة جينوميديا</h2>
-          <div class="card p-10 text-center border-dashed border-2 border-theme">
-            <p class="text-muted">واجهة إضافة الأخبار العلمية والصور ستكون هنا.</p>
+          <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>📰</span> إدارة جينوميديا (الأخبار والمقالات العلمية)</h2>
+          
+          <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
+            <h3 class="text-base font-bold mb-4 text-accent">✍️ نشر مقال علمي أو خبر جديد (مع مجلدات عربية وإنجليزية سحابية)</h3>
+            <form id="news-form" class="space-y-4 text-xs" autocomplete="off">
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold mb-1">عنوان المقال (بالعربي) *</label>
+                  <input type="text" id="news-title-ar" placeholder="مثال: الإنجاز العلمي الحديث..." class="form-input w-full p-2.5 rounded border border-theme bg-surface font-medium" required />
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Title in English *</label>
+                  <input type="text" id="news-title-en" placeholder="e.g: Modern Scientific Breakthrough..." class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left font-medium" dir="ltr" required />
+                </div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold mb-1">نص المقال أو التفاصيل (بالعربي) *</label>
+                  <textarea id="news-content-ar" rows="4" placeholder="اكتب تفاصيل المقال هنا..." class="form-input w-full p-2.5 rounded border border-theme bg-surface leading-relaxed" required></textarea>
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Article Content (in English) *</label>
+                  <textarea id="news-content-en" rows="4" placeholder="Write article details here..." class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left leading-relaxed" dir="ltr" required></textarea>
+                </div>
+              </div>
+
+              <div class="p-3 bg-surface-secondary rounded-xl border border-theme space-y-3">
+                <span class="block font-bold text-accent text-xs">📎 المرفقات السحابية الأولية (اختياري - سيتم إنشاؤها داخل Google Drive)</span>
+                <div class="grid sm:grid-cols-3 gap-3 items-center text-[11px]">
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">اسم المساهم / الكاتب:</label>
+                    <input type="text" id="news-author" placeholder="مثال: عيسى بيانوني" class="form-input w-full p-2 rounded border border-theme bg-surface" />
+                  </div>
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">صورة الغلاف (الأقصى 12MB):</label>
+                    <input type="file" id="news-image-input" accept=".jpg,.png,.jpeg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                  </div>
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">ملاحظة بشأن الملفات الضخمة:</label>
+                    <p class="text-[10px] text-muted leading-tight">الملفات > 12MB والفيديوهات تُرفع يدوياً على Drive، ثم اضغط زر "مزامنة 🔄".</p>
+                  </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-theme text-[11px]">
+                  <div>
+                    <label class="block text-green-600 font-bold mb-1">📄 ملف المجلد العربي (AR Folder File - اختياري):</label>
+                    <input type="file" id="news-file-ar" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                  </div>
+                  <div>
+                    <label class="block text-blue-600 font-bold mb-1">📄 ملف المجلد الإنجليزي (EN Folder File - اختياري):</label>
+                    <input type="file" id="news-file-en" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold text-sm mt-2 shadow-sm hover:opacity-95 transition-opacity">نشر المقال في جينوميديا 🚀</button>
+            </form>
+          </div>
+
+          <div class="card p-6 border border-theme shadow-sm bg-surface">
+            <h3 class="text-base font-bold mb-4 flex items-center justify-between">
+              <span>📑 المقالات المنشورة حالياً وإدارة ملفاتها السحابية</span>
+              <span class="text-[11px] bg-surface-secondary text-muted px-2.5 py-1 rounded-full border border-theme font-mono">نظام المجلدات المزدوجة AR/EN</span>
+            </h3>
+            <div id="genomedia-list" class="space-y-3"></div>
           </div>
         </div>
 
+        <!-- قسم إدارة الربط مع الحياة -->
         <div id="life-section" class="admin-section hidden">
-          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة الربط مع الحياة</h2>
-          <div class="card p-10 text-center border-dashed border-2 border-theme">
-            <p class="text-muted">واجهة إضافة مواضيع الربط مع الحياة ستكون هنا.</p>
+          <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>🧬</span> إدارة الربط مع الحياة (التطبيقات العملية)</h2>
+          
+          <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
+            <h3 class="text-base font-bold mb-4 text-accent">🔬 إضافة بحث أو تطبيق عملي (مجلدات AR/EN)</h3>
+            <form id="life-form" class="space-y-4 text-xs" autocomplete="off">
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold mb-1">عنوان البحث/التطبيق (بالعربي) *</label>
+                  <input type="text" id="life-title-ar" placeholder="مثال: ترابط التخصصات..." class="form-input w-full p-2.5 rounded border border-theme bg-surface font-medium" required />
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Title in English *</label>
+                  <input type="text" id="life-title-en" placeholder="e.g: Biotechnology & AI..." class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left font-medium" dir="ltr" required />
+                </div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold mb-1">شرح التطبيق العملي (بالعربي) *</label>
+                  <textarea id="life-content-ar" rows="4" placeholder="اكتب تفاصيل أو ملخص الموضوع هنا..." class="form-input w-full p-2.5 rounded border border-theme bg-surface leading-relaxed" required></textarea>
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Application Details (in English) *</label>
+                  <textarea id="life-content-en" rows="4" placeholder="Write details here..." class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left leading-relaxed" dir="ltr" required></textarea>
+                </div>
+              </div>
+
+              <div class="p-3 bg-surface-secondary rounded-xl border border-theme space-y-3">
+                <span class="block font-bold text-accent text-xs">📎 إعدادات البطاقة والمرفقات السحابية</span>
+                <div class="grid sm:grid-cols-2 gap-3 items-center text-[11px]">
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">اسم الباحث / الكاتب:</label>
+                    <input type="text" id="life-author" placeholder="مثال: عيسى بيانوني" class="form-input w-full p-2 rounded border border-theme bg-surface" />
+                  </div>
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">صورة الغلاف (اختياري):</label>
+                    <input type="file" id="life-image-input" accept=".jpg,.png,.jpeg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                  </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-theme text-[11px]">
+                  <div>
+                    <label class="block text-green-600 font-bold mb-1">📄 ملف المجلد العربي (AR Folder File):</label>
+                    <input type="file" id="life-file-ar" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                  </div>
+                  <div>
+                    <label class="block text-blue-600 font-bold mb-1">📄 ملف المجلد الإنجليزي (EN Folder File):</label>
+                    <input type="file" id="life-file-en" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold text-sm mt-2 shadow-sm hover:opacity-95 transition-opacity">إضافة الموضوع إلى الربط مع الحياة 🚀</button>
+            </form>
+          </div>
+
+          <div class="card p-6 border border-theme shadow-sm bg-surface">
+            <h3 class="text-base font-bold mb-4 flex items-center justify-between">
+              <span>📚 الأبحاث والمواضيع المضافة</span>
+              <span class="text-[11px] bg-surface-secondary text-muted px-2.5 py-1 rounded-full border border-theme font-mono">نظام المجلدات المزدوجة AR/EN</span>
+            </h3>
+            <div id="life-list-container" class="space-y-3"></div>
           </div>
         </div>
 
+        <!-- قسم الدورات والتدريب الميداني والشارات -->
+        <!-- قسم الدورات والتدريب الميداني والشارات -->
         <div id="extra-section" class="admin-section hidden">
-          <h2 class="text-2xl font-bold mb-6 text-accent">إدارة الدورات والتدريب</h2>
-          <div class="card p-10 text-center border-dashed border-2 border-theme">
-            <p class="text-muted">واجهة إضافة الدورات التدريبية والشارات ستكون هنا.</p>
+          <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>🎓</span> إدارة الدورات والتدريب الإضافي</h2>
+          
+          <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
+            <h3 class="text-base font-bold mb-4 text-accent">➕ إضافة كورس تدريبي جديد</h3>
+            <form id="extra-course-form" class="space-y-4 text-xs" autocomplete="off">
+              <!-- العناوين -->
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold mb-1">اسم الدورة (بالعربي) *</label>
+                  <input type="text" id="extra-title-ar" placeholder="مثال: أساسيات السلامة المخبرية" class="form-input w-full p-2.5 rounded border border-theme bg-surface font-medium" required />
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Course Name in English *</label>
+                  <input type="text" id="extra-title-en" placeholder="e.g: Lab Safety Basics" class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left font-medium" dir="ltr" required />
+                </div>
+              </div>
+
+              <!-- التفاصيل (الوصف) -->
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold mb-1">وصف أو تفاصيل الدورة (بالعربي) *</label>
+                  <textarea id="extra-content-ar" rows="2" placeholder="اكتب تفاصيل الدورة (يمكنك وضع روابط هنا)..." class="form-input w-full p-2.5 rounded border border-theme bg-surface leading-relaxed" required></textarea>
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Course Description (in English) *</label>
+                  <textarea id="extra-content-en" rows="2" placeholder="Write course description (links are clickable)..." class="form-input w-full p-2.5 rounded border border-theme bg-surface text-left leading-relaxed" dir="ltr" required></textarea>
+                </div>
+              </div>
+
+              <!-- الإعدادات والشارات -->
+              <div class="p-3 bg-surface-secondary rounded-xl border border-theme space-y-3">
+                <span class="block font-bold text-accent text-xs">🛠️ إعدادات البطاقة والشارات</span>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end text-[11px]">
+                  
+                  <!-- رابط الدورة الخارجي -->
+                  <div class="lg:col-span-2">
+                    <label class="block text-muted mb-1 font-semibold">رابط التسجيل في الدورة *</label>
+                    <input type="url" id="extra-url" placeholder="https://coursera.org/..." class="form-input w-full p-2 rounded border border-theme bg-surface text-left" dir="ltr" required />
+                  </div>
+
+                  <!-- حقل الساعات -->
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">مدة الدورة (بالساعات) *</label>
+                    <input type="number" id="extra-hours" placeholder="مثال: 5" class="form-input w-full p-2 rounded border border-theme bg-surface text-left" dir="ltr" required />
+                  </div>
+                  <!-- شارة الشهادة (مع/بدون) -->
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">حالة الشهادة:</label>
+                    <select id="extra-cert-badge" class="form-input w-full p-2 rounded border border-theme bg-surface font-semibold text-center">
+                      <option value="with-cert">✅ مع شهادة (أخضر)</option>
+                      <option value="no-cert">❌ بدون شهادة (أحمر)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-theme text-[11px]">
+                  <!-- شارة نوع الدورة (مسجلة/أونلاين) -->
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">نوع الدورة:</label>
+                    <select id="extra-type-badge" class="form-input w-full p-2 rounded border border-theme bg-surface font-semibold text-center">
+                      <option value="recorded">📼 مسجلة (أصفر)</option>
+                      <option value="online">💻 أونلاين (أزرق)</option>
+                    </select>
+                  </div>
+
+                  <!-- تاريخ البدء (يُفعل فقط إذا كانت أونلاين) -->
+                  <div>
+                    <label class="block text-muted mb-1 font-semibold">تاريخ البدء (للدورات الأونلاين فقط):</label>
+                    <input type="date" id="extra-date" class="form-input w-full p-2 rounded border border-theme bg-surface font-mono opacity-50 cursor-not-allowed" disabled />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold text-sm mt-2 shadow-sm hover:opacity-95 transition-opacity">إضافة الدورة للموقع 🚀</button>
+            </form>
+          </div>
+
+          <!-- قائمة الدورات المنشورة -->
+          <div class="card p-6 border border-theme shadow-sm bg-surface">
+            <h3 class="text-base font-bold mb-4 flex items-center justify-between">
+              <span>📋 الدورات المضافة حالياً</span>
+            </h3>
+            <div id="extra-courses-list" class="space-y-3"></div>
           </div>
         </div>
-
       </main>
     </div>
   </div>
 
-  <div id="admin-toast" class="hidden fixed bottom-6 left-6 text-white text-sm px-6 py-3 rounded-lg shadow-lg font-medium transition-opacity duration-300 z-50"></div>
+  <div id="admin-toast" class="hidden fixed bottom-6 left-6 text-white text-xs px-5 py-2.5 rounded-lg shadow-lg font-medium transition-opacity duration-300 z-50"></div>
 
-  <!-- استدعاء ملف الجافاسكريبت كـ Module -->
-  <script type="module" src="../assets/js/admin.js"></script>
+  <script type="module" src="../assets/js/admin/admin-core.js"></script>
 </body>
 </html>

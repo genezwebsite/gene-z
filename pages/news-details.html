@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>تفاصيل الخبر — Gene_Z</title>
+  <title data-en="Article Details — Gene_Z">تفاصيل الخبر — Gene_Z</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,18 +22,23 @@
   <main class="flex-1 py-12 sm:py-16">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <a href="news.html" class="inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors mb-6 font-medium">
-        <span>&rarr;</span> العودة لجينوميديا
+      <a href="news.html" class="inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors mb-8 font-semibold bg-surface-secondary px-4 py-2 rounded-full border border-theme shadow-sm w-fit">
+        <span>&rarr;</span> <span data-en="Back to GenoMedia">العودة لجينوميديا</span>
       </a>
 
-      <div id="geno-content">
-        <p class="text-center text-muted">جاري تحميل الخبر...</p>
+      <!-- حاوية تفاصيل المقال (يتم حقنها ديناميكياً بواسطة genomedia.js) -->
+      <div id="geno-content" class="min-h-[400px]">
+        <div class="flex flex-col items-center justify-center py-20 card border-theme rounded-2xl space-y-3">
+          <div class="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-sm font-semibold text-muted" data-en="Loading article details...">جاري تحميل تفاصيل الخبر...</p>
+        </div>
       </div>
 
     </div>
   </main>
 
   <div id="site-footer"></div>
+  
   <script src="../assets/js/genomedia.js"></script>
   <script src="../assets/js/main.js"></script>
 </body>

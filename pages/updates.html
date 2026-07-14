@@ -12,10 +12,7 @@
   <script src="../assets/js/theme.js"></script>
   <style>
     body { font-family: 'Noto Kufi Arabic', sans-serif; }
-    /* تأثير تفاعلي للبطاقات عند التمرير والضغط */
-    .update-card {
-      transition: all 0.25s ease;
-    }
+    .update-card { transition: all 0.25s ease; }
     .update-card:hover {
       transform: translateY(-3px);
       border-color: var(--color-accent);
@@ -32,53 +29,25 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <div class="mb-10 text-center md:text-start flex items-center gap-3 justify-center md:justify-start">
-        <!-- أيقونة الجرس في عنوان الصفحة -->
         <svg class="w-8 h-8 text-accent animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
         <h1 class="text-3xl sm:text-4xl font-bold text-accent transition-colors duration-300" data-en="Latest Updates & Notifications">أحدث الإعلانات والتحديثات</h1>
       </div>
 
-      <!-- قائمة الإعلانات -->
-      <div class="space-y-4">
-        
-        <!-- المثال الأول: جدول اختبارات الميد (يفتح ملف PDF أو رابط جدول عند الضغط عليه) -->
-        <a href="https://example.com/midterm-schedule.pdf" target="_blank" class="update-card card block p-6 rounded-2xl border border-theme bg-surface-secondary cursor-pointer">
-          <div class="flex justify-between items-start gap-4 mb-2">
-            <h2 class="text-xl font-bold text-accent" data-en="Midterm Exams Schedule Released">صدور جدول اختبارات منتصف الفصل (Midterm)</h2>
-            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-surface border border-theme text-muted shrink-0">11/07/2026</span>
-          </div>
-          <p class="text-muted text-sm sm:text-base leading-relaxed" data-en="The midterm examination schedule has been officially released. Exams begin next week. Click here to download or view the schedule file.">
-            تم اعتماد ونشر جدول اختبارات منتصف الفصل الدراسي. تبدأ الاختبارات الأسبوع القادم، اضغط هنا لعرض أو تحميل ملف الجدول ومراجعة أوقات وقاعات الامتحانات.
-          </p>
-        </a>
-
-        <!-- المثال الثاني: نزول العلامات (يفتح رابط بوابة العلامات عند الضغط عليه) -->
-        <a href="https://example.com/portal" target="_blank" class="update-card card block p-6 rounded-2xl border border-theme bg-surface-secondary cursor-pointer">
-          <div class="flex justify-between items-start gap-4 mb-2">
-            <h2 class="text-xl font-bold text-accent" data-en="Course Grades & Evaluations Posted">إعلان نتائج وتقييمات المواد الدراسية</h2>
-            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-surface border border-theme text-muted shrink-0">10/07/2026</span>
-          </div>
-          <p class="text-muted text-sm sm:text-base leading-relaxed" data-en="First and second evaluation grades have been posted on the academic portal. Click here to go to the portal and check your results.">
-            تم رصد واعتماد علامات التقييم الأول والثاني على البوابة الأكاديمية. اضغط هنا للانتقال إلى البوابة ومراجعة نتيجتك، يرجى التواصل مع مدرس المادة خلال 48 ساعة في حال وجود استفسار.
-          </p>
-        </a>
-
-        <!-- مثال ثالث (نصي فقط بدون رابط يفتح في صفحة، استخدمنا # أو جافاسكربت لمنع التوجيه إن أردت) -->
-        <div class="card block p-6 rounded-2xl border border-theme bg-surface-secondary">
-          <div class="flex justify-between items-start gap-4 mb-2">
-            <h2 class="text-xl font-bold text-accent" data-en="Important Note on Lab Attendance">تنبيه بخصوص حضور المختبرات العملي</h2>
-            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-surface border border-theme text-muted shrink-0">08/07/2026</span>
-          </div>
-          <p class="text-muted text-sm sm:text-base leading-relaxed" data-en="Please make sure to wear the lab coat and bring the biology safety manual before entering the laboratories tomorrow.">
-            يرجى التأكد من الالتزام بارتداء المعطف المخبري (Lab Coat) وإحضار دليل السلامة لمختبر البيولوجيا قبل الدخول إلى المختبرات اعتباراً من يوم غد.
-          </p>
-        </div>
-
+      <!-- حاوية الإعلانات الديناميكية (فارغة ليتم تعبئتها بالجافاسكريبت) -->
+      <div id="public-updates-list" class="space-y-4">
+         <div class="flex flex-col items-center justify-center py-10">
+            <div class="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p class="text-sm font-semibold text-muted">جاري تحميل التحديثات...</p>
+         </div>
       </div>
 
     </div>
   </main>
 
   <div id="site-footer"></div>
+  
+  <!-- استدعاء سكربت التنبيهات المطور -->
+  <script src="../assets/js/updates.js"></script>
   <script src="../assets/js/main.js"></script>
 </body>
 </html>

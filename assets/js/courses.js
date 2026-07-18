@@ -120,8 +120,7 @@ import { trackEvent } from "./admin/admin-analytics.js";
   }
 
   function navigateToCourse(courseId) {
-    // ✅ إرسال حدث المشاهدة (View) لمحرك الإحصائيات قبل الانتقال لصفحة تفاصيل المادة
-    trackEvent("genez_courses", String(courseId), "views");
+    // سيتم تسجيل المشاهدة داخل صفحة course-details.html لضمان اكتمال الطلب السحابي
     window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
   }
 

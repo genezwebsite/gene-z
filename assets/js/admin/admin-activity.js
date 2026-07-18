@@ -1,5 +1,5 @@
 // assets/js/admin/admin-activity.js
-import { db } from "../firebase-init.js";
+import { auth, db } from "../firebase-init.js";
 import { 
   collection, 
   onSnapshot, 
@@ -7,16 +7,27 @@ import {
   orderBy, 
   getDocs, 
   deleteDoc, 
-  doc, 
+  doc,
+  getDoc,
   updateDoc, 
   setDoc, 
   serverTimestamp,
   deleteField 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged, 
+  setPersistence, 
+  browserSessionPersistence 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const MASTER_USER = "essagenezessa";
-const MASTER_PASS = "essagexgenez";
-const SESSION_KEY = "genez_secret_monitor_auth";
+function escapeHTML(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[tag] || tag));
+}
 
 let allLogs = []; 
 let currentSearchQuery = "";
@@ -32,31 +43,64 @@ function initSecretGate() {
 
   if (!loginGate || !dashboard) return;
 
-  if (sessionStorage.getItem(SESSION_KEY) === "authorized") {
-    showDashboard();
-  }
+  setPersistence(auth, browserSessionPersistence).catch(err => console.error("Persistence error:", err));
 
-  authForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const userVal = document.getElementById("secret-user").value.trim();
-    const passVal = document.getElementById("secret-pass").value.trim();
+  onAuthStateChanged(auth, async (user) => {
+    if (user && db) {
+      try {
+        const docRef = doc(db, "admin_roles", user.email.toLowerCase());
+        const docSnap = await getDoc(docRef);
 
-    if (userVal === MASTER_USER && passVal === MASTER_PASS) {
-      errorMsg?.classList.add("hidden");
-      sessionStorage.setItem(SESSION_KEY, "authorized");
-      showDashboard();
+        if (docSnap.exists() && docSnap.data().role === 'owner') {
+          errorMsg?.classList.add("hidden");
+          showDashboard();
+        } else {
+          await signOut(auth);
+          if (errorMsg) {
+            errorMsg.innerText = "غير مصرح لك بالوصول لغرفة المراقبة السحابية؛ هذه المساحة مخصصة للمالك فقط.";
+            errorMsg.classList.remove("hidden");
+          }
+          hideDashboard();
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        await signOut(auth);
+        hideDashboard();
+      }
     } else {
-      errorMsg?.classList.remove("hidden");
-      document.getElementById("secret-pass").value = "";
+      hideDashboard();
     }
   });
 
-  logoutBtn?.addEventListener("click", () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    if (unsubscribeLogs) unsubscribeLogs();
-    if (unsubscribeDevices) unsubscribeDevices();
-    location.reload();
+  authForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const emailVal = document.getElementById("monitor-email").value.trim();
+    const passVal = document.getElementById("monitor-pass").value;
+
+    if (errorMsg) errorMsg.classList.add("hidden");
+
+    signInWithEmailAndPassword(auth, emailVal, passVal)
+      .catch((error) => {
+        if (errorMsg) {
+          errorMsg.innerText = "بيانات الوصول غير صحيحة!";
+          errorMsg.classList.remove("hidden");
+        }
+        document.getElementById("monitor-pass").value = "";
+      });
   });
+
+  logoutBtn?.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      if (unsubscribeLogs) unsubscribeLogs();
+      if (unsubscribeDevices) unsubscribeDevices();
+      location.reload();
+    });
+  });
+}
+
+function hideDashboard() {
+  document.getElementById("secret-login-gate")?.classList.remove("hidden");
+  document.getElementById("monitor-dashboard")?.classList.add("hidden");
 }
 
 function showDashboard() {
@@ -102,27 +146,27 @@ function initDeviceRequestsListener() {
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <span class="text-xl">⚠️</span>
-            <h4 class="text-sm font-bold text-amber-300">طلب اعتماد جهاز جديد للمشرف: <span class="text-white font-mono underline">${req.email}</span></h4>
+            <h4 class="text-sm font-bold text-amber-300">طلب اعتماد جهاز جديد للمشرف: <span class="text-white font-mono underline">${escapeHTML(req.email)}</span></h4>
           </div>
-          <p class="text-xs text-muted font-mono">💻 مواصفات الجهاز: <span class="text-content font-bold">${req.info}</span></p>
+          <p class="text-xs text-muted font-mono">💻 مواصفات الجهاز: <span class="text-content font-bold">${escapeHTML(req.info)}</span></p>
           <p class="text-[11px] text-muted">الأجهزة المعتمدة له حالياً: <span class="font-bold font-mono text-teal-400">${req.currentAllowed.length} أجهزة</span></p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
           <!-- الخيار 1: اعتماد وإلغاء القديم -->
-          <button type="button" onclick="handleDeviceDecision('${req.email}', '${req.id}', '${req.info}', 'replace')" 
+          <button type="button" onclick="handleDeviceDecision('${escapeHTML(req.email)}', '${escapeHTML(req.id)}', '${escapeHTML(req.info)}', 'replace')" 
             class="bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-3 rounded-xl font-bold shadow transition-all">
             1️⃣ اعتماد وإلغاء القديم
           </button>
 
           <!-- الخيار 2: اعتماد كجهاز إضافي -->
-          <button type="button" onclick="handleDeviceDecision('${req.email}', '${req.id}', '${req.info}', 'add')" 
+          <button type="button" onclick="handleDeviceDecision('${escapeHTML(req.email)}', '${escapeHTML(req.id)}', '${escapeHTML(req.info)}', 'add')" 
             class="bg-teal-600 hover:bg-teal-700 text-white text-xs py-2 px-3 rounded-xl font-bold shadow transition-all">
             2️⃣ اعتماد كجهاز إضافي ➕
           </button>
 
           <!-- الخيار 3: عدم الاعتماد (رفض) -->
-          <button type="button" onclick="handleDeviceDecision('${req.email}', '${req.id}', '${req.info}', 'reject')" 
+          <button type="button" onclick="handleDeviceDecision('${escapeHTML(req.email)}', '${escapeHTML(req.id)}', '${escapeHTML(req.info)}', 'reject')" 
             class="bg-surface-secondary hover:bg-theme text-muted hover:text-white text-xs py-2 px-3 rounded-xl font-bold border border-theme transition-all">
             3️⃣ عدم الاعتماد ❌
           </button>
@@ -262,14 +306,14 @@ function renderLogsTable() {
         <td class="px-5 py-4 font-mono text-content font-semibold">
           <div class="flex items-center gap-2">
             <span class="text-accent">👤</span>
-            <span class="text-teal-300 font-mono">${log.adminEmail || "مشرف غير معروف"}</span>
+            <span class="text-teal-300 font-mono">${escapeHTML(log.adminEmail || "مشرف غير معروف")}</span>
           </div>
         </td>
         <td class="px-5 py-4">
-          <span class="px-3 py-1 rounded-lg text-[11px] font-bold border ${badgeStyle}">${log.action || "عملية نظام"}</span>
+          <span class="px-3 py-1 rounded-lg text-[11px] font-bold border ${badgeStyle}">${escapeHTML(log.action || "عملية نظام")}</span>
         </td>
-        <td class="px-5 py-4 font-medium text-content max-w-xs truncate" title="${log.targetName || ''}">
-          ${log.targetName ? `📁 ${log.targetName}` : '<span class="text-muted italic">--</span>'}
+        <td class="px-5 py-4 font-medium text-content max-w-xs truncate" title="${escapeHTML(log.targetName || '')}">
+          ${log.targetName ? `📁 ${escapeHTML(log.targetName)}` : '<span class="text-muted italic">--</span>'}
         </td>
         <td class="px-5 py-4 text-muted font-mono text-[11px] whitespace-nowrap">🕒 ${formattedTime}</td>
       </tr>
@@ -295,4 +339,9 @@ async function clearAllLogs() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", initSecretGate);
+// Initialize
+if (document.readyState === 'loading') {
+  document.addEventListener("DOMContentLoaded", initSecretGate);
+} else {
+  initSecretGate();
+}

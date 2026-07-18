@@ -367,9 +367,11 @@ window.executeFileUpload = async (courseId) => {
 };
 
 window.syncCourseFiles = async (courseId) => {
+  if (activeUploadLocks[courseId]) { showToast("⏳ يرجى الانتظار، هناك عملية قيد التنفيذ لهذه المادة...", "info"); return; }
   const course = cloudAdminCourses.find(c => String(c.id) === String(courseId));
   if (!course || !course.subFolders) return;
 
+  activeUploadLocks[courseId] = true;
   showToast("🔄 جاري مزامنة المجلدات مع Google Drive...", "info");
   try {
     const result = await fetchDriveAPI('courses', 'syncFolder', { subFolders: course.subFolders });
@@ -385,16 +387,25 @@ window.syncCourseFiles = async (courseId) => {
   } catch (err) {
     console.error("Sync error:", err);
     showToast("❌ حدث خطأ أثناء المزامنة السحابية", "error");
+  } finally {
+    activeUploadLocks[courseId] = false;
   }
 };
 
 window.deleteEntireCourse = async (courseId, mainFolderId) => {
+  if (activeUploadLocks[courseId]) { showToast("⏳ يرجى الانتظار، هناك عملية قيد التنفيذ لهذه المادة...", "info"); return; }
   if (!confirm("تأكيد حذف المادة ونقلها لسلة المهملات السحابية في Google Drive وحذفها من Firestore؟")) return;
+  
+  activeUploadLocks[courseId] = true;
   try {
     const courseToDelete = cloudAdminCourses.find(c => String(c.id) === String(courseId));
     if (mainFolderId && mainFolderId !== 'undefined') {
       await fetchDriveAPI('courses', 'deleteFolder', { folderId: mainFolderId });
     }
+    if (courseToDelete && window.deductStatsOnDelete) {
+      await window.deductStatsOnDelete(courseToDelete);
+    }
+    
     await deleteDoc(doc(db, "genez_courses", String(courseId)));
     
     if (courseToDelete) await logAdminActivity("[قسم المواد] حذف مادة دراسية", `[${courseToDelete.code}] ${courseToDelete.nameAr}`);
@@ -403,11 +414,16 @@ window.deleteEntireCourse = async (courseId, mainFolderId) => {
   } catch (err) {
     console.error("Error deleting course:", err);
     showToast("❌ حدث خطأ أثناء حذف المادة", "error");
+  } finally {
+    activeUploadLocks[courseId] = false;
   }
 };
 
 window.deleteCourseFile = async (courseId, fileId) => {
+  if (activeUploadLocks[courseId]) { showToast("⏳ يرجى الانتظار، هناك عملية قيد التنفيذ لهذه المادة...", "info"); return; }
   if (!confirm("تأكيد النقل لسلة مهملات السحابة؟")) return;
+  
+  activeUploadLocks[courseId] = true;
   try {
     const result = await fetchDriveAPI('courses', 'deleteFile', { fileId: fileId });
     if (result?.success) {
@@ -426,5 +442,7 @@ window.deleteCourseFile = async (courseId, fileId) => {
   } catch (err) {
     console.error("Error deleting file:", err);
     showToast("❌ حدث خطأ أثناء حذف الملف", "error");
+  } finally {
+    activeUploadLocks[courseId] = false;
   }
 };

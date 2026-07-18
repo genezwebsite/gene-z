@@ -5,25 +5,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GZ-MONITOR | النظام المركزي</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            surface: '#0f172a',
-            'surface-secondary': '#1e293b',
-            theme: '#334155',
-            content: '#f8fafc',
-            muted: '#94a3b8',
-            accent: '#0d9488'
-          }
-        }
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
   <style>
-    body { background-color: #0b0f19; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    :root {
+      --color-bg-primary: #0f172a;
+      --color-bg-secondary: #1e293b;
+      --color-border: #334155;
+      --color-text: #f8fafc;
+      --color-text-muted: #94a3b8;
+      --color-accent: #0d9488;
+      --color-accent-hover: #0f766e;
+    }
+    body { background-color: #0b0f19; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -38,15 +31,15 @@
 
     <form id="monitor-auth-form" class="space-y-4">
       <div>
-        <label class="block text-xs font-bold text-muted mb-1">معرف الوصول (Username)</label>
-        <input type="text" id="secret-user" required autocomplete="off"
+        <label class="block text-xs font-bold text-muted mb-1">البريد الإلكتروني (Email)</label>
+        <input type="email" id="monitor-email" required autocomplete="email"
           class="w-full px-4 py-2.5 rounded-xl bg-surface-secondary border border-theme text-sm font-mono text-content focus:outline-none focus:border-accent transition-colors"
-          placeholder="Enter Master User..." />
+          placeholder="admin@example.com" />
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-muted mb-1">مفتاح التشفير (Password)</label>
-        <input type="password" id="secret-pass" required
+        <label class="block text-xs font-bold text-muted mb-1">كلمة المرور (Password)</label>
+        <input type="password" id="monitor-pass" required
           class="w-full px-4 py-2.5 rounded-xl bg-surface-secondary border border-theme text-sm font-mono text-content focus:outline-none focus:border-accent transition-colors"
           placeholder="••••••••••••••••" />
       </div>

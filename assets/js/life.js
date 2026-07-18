@@ -35,16 +35,19 @@ import { trackEvent } from "./admin/admin-analytics.js";
     return liked.includes(String(topicId));
   }
 
-  // ✅ تعديل جذري: دالة الإعجاب الآن تقوم بالإضافة فقط، وتمنع "إلغاء الإعجاب" (Toggle) لسد ثغرة التلاعب
-  function setUserLikedLocal(topicId) {
+  // ✅ دالة تسمح بالإضافة والإزالة بحرية
+  function toggleUserLikedLocal(topicId) {
     let liked = JSON.parse(localStorage.getItem(LIKED_TOPICS_KEY) || "[]");
     const strId = String(topicId);
-    if (!liked.includes(strId)) {
+    if (liked.includes(strId)) {
+      liked = liked.filter(id => id !== strId);
+      localStorage.setItem(LIKED_TOPICS_KEY, JSON.stringify(liked));
+      return false; // تمت الإزالة
+    } else {
       liked.push(strId);
       localStorage.setItem(LIKED_TOPICS_KEY, JSON.stringify(liked));
-      return true; 
+      return true; // تمت الإضافة
     }
-    return false;
   }
 
   const catNames = {
@@ -267,32 +270,33 @@ import { trackEvent } from "./admin/admin-analytics.js";
       }
     };
 
-    // ✅ معالجة زر الإعجاب الفائقة الأمان (يسمح بإضافة إعجاب واحد فقط ويمنع السحب)
+    // ✅ نظام الإعجاب (مع ميزة الإزالة) المفصول عن تعارض محرك الإحصائيات
     const likeBtn = document.getElementById("like-btn");
     likeBtn?.addEventListener("click", async () => {
       if (isProcessingLike) return; 
       isProcessingLike = true;
       
-      const isCurrentlyLiked = hasUserLiked(topic.id);
-      
-      if (isCurrentlyLiked) {
-        isProcessingLike = false;
-        return; 
-      }
+      const isNowLiked = toggleUserLikedLocal(topic.id);
+      const docRef = doc(db, "genez_life_connection", String(topic.id));
 
-      const isNowLiked = setUserLikedLocal(topic.id);
-      if(isNowLiked) {
-        const docRef = doc(db, "genez_life_connection", String(topic.id));
-        try {
-          await updateDoc(docRef, { likes: increment(1) });
-          trackEvent("genez_life_connection", String(topic.id), "likes"); 
-        } catch (err) {
-          console.error("❌ فشل تحديث الإعجابات سحابياً:", err);
-          let liked = JSON.parse(localStorage.getItem(LIKED_TOPICS_KEY) || "[]");
-          localStorage.setItem(LIKED_TOPICS_KEY, JSON.stringify(liked.filter(id => id !== String(topic.id))));
+      try {
+        // تحديث الرقم في المستند (يسمح بالزيادة والنقصان بحرية)
+        await updateDoc(docRef, { likes: increment(isNowLiked ? 1 : -1) });
+        
+        // إرسال الإحصائية للرسم البياني بهدوء (دون التأثير على المستند لمنع التكرار)
+        if (isNowLiked) {
+           const analyticsKey = `genez_stats_liked_life_${topic.id}`;
+           if (!localStorage.getItem(analyticsKey)) {
+               trackEvent(null, null, "likes"); // المعاملات null تمنعه من لمس المستند!
+               localStorage.setItem(analyticsKey, "true");
+           }
         }
+      } catch (err) {
+        console.error("❌ فشل تحديث الإعجاب:", err);
+        toggleUserLikedLocal(topic.id); // التراجع في حال الفشل
+      } finally {
+        isProcessingLike = false;
       }
-      isProcessingLike = false;
     });
 
     // ✅ معالجة المشاركة المتطورة (Native Web Share) مع الـ Fallback

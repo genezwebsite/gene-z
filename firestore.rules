@@ -1,0 +1,78 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    function isAdmin() {
+      return request.auth != null;
+    }
+    
+    function isOnlyUpdatingStats() {
+      // Allow update only if the keys being changed are stats keys
+      let incomingKeys = request.resource.data.keys();
+      let existingKeys = resource.data.keys();
+      
+      // Ensure no fields other than stats are being modified
+      let diff = incomingKeys.removeAll(existingKeys).concat(existingKeys.removeAll(incomingKeys));
+      let modifiedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      
+      return modifiedKeys.hasOnly(['views', 'likes', 'shares', 'downloads', 'clicks', 'visits']);
+    }
+
+    // 1. Content Collections
+    match /genez_courses/{courseId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isOnlyUpdatingStats();
+    }
+    match /genez_genomedia/{topicId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isOnlyUpdatingStats();
+    }
+    match /genez_life_connection/{topicId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isOnlyUpdatingStats();
+    }
+    match /genez_updates/{updateId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isOnlyUpdatingStats();
+    }
+    match /genez_extra_courses/{courseId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isOnlyUpdatingStats();
+    }
+    
+    // 2. Settings
+    match /genez_settings/{settingId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isOnlyUpdatingStats();
+    }
+
+    // 3. Analytics
+    match /genez_analytics/{statId} {
+      allow read: if true;
+      allow create: if true; // Because tracking engine creates daily docs
+      allow update: if true; // Because tracking engine updates counters
+      allow delete: if isAdmin();
+    }
+
+    // 4. سجلات التوثيق والنشاطات (activity_logs)
+    match /activity_logs/{logId} {
+      allow create: if isAdmin();
+      allow read, delete: if isAdmin() && get(/databases/$(database)/documents/admin_roles/$(request.auth.token.email)).data.role == 'owner';
+      allow update: if false; // أمان مشدد: يمنع تعديل السجل بعد إنشائه نهائياً (Audit Lock)
+    }
+    
+    // 5. Admin Roles
+    match /admin_roles/{roleId} {
+      allow read: if true; // To verify if an email is an admin
+      allow write: if isAdmin(); // Only admins can add/remove admins
+    }
+  }
+}

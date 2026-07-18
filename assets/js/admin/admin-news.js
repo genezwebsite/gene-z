@@ -406,6 +406,10 @@ window.deleteEntireNews = async (id, mainFolderId) => {
     await fetchDriveAPI('genomedia', 'deleteFolder', { folderId: mainFolderId });
   }
   
+  if (item && window.deductStatsOnDelete) {
+    await window.deductStatsOnDelete(item);
+  }
+  
   await deleteDoc(doc(db, "genez_genomedia", String(id)));
   
   if (item) await logAdminActivity("[قسم جينوميديا] حذف مقال/خبر", item.titleAr || "");

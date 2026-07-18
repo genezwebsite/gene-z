@@ -235,6 +235,10 @@ window.deleteExtraCourse = async (id) => {
     const list = await getCloudExtraCoursesList();
     const courseToDelete = list.find(c => String(c.id) === String(id));
     
+    if (courseToDelete && window.deductStatsOnDelete) {
+      await window.deductStatsOnDelete(courseToDelete);
+    }
+    
     await deleteDoc(doc(db, "genez_extra_courses", String(id)));
     
     if (courseToDelete) await logAdminActivity("[قسم الدورات التدريبية] حذف دورة", courseToDelete.titleAr || "");

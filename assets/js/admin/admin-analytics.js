@@ -10,12 +10,29 @@ import {
   limit, 
   where, 
   setDoc, 
+  updateDoc,
   increment 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let analyticsChartInstance = null;
 
 export async function initAnalyticsDashboard() {
+  // الانتظار حتى يصبح عنصر الرسم البياني متاحاً في الـ DOM
+  const waitForDOM = () => new Promise(resolve => {
+    if (document.getElementById('analyticsGrowthChart')) {
+      return resolve();
+    }
+    const observer = new MutationObserver((mutations, obs) => {
+      if (document.getElementById('analyticsGrowthChart')) {
+        obs.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+
+  await waitForDOM();
+
   await loadGeneralStats();
   await loadAnalyticsChart('7'); 
   await loadTopPerformingContent();
@@ -25,22 +42,55 @@ export async function initAnalyticsDashboard() {
 async function loadGeneralStats() {
   try {
     const generalStatsRef = doc(db, "genez_analytics", "general_stats");
+    
+    // 1. الحساب الحي (Real-time Aggregation)
+    let realLikes = 0;
+    let realShares = 0;
+    
+    const collectionsToFetch = ["genez_genomedia", "genez_life_connection", "genez_courses", "genez_extra_courses"];
+    for (const collName of collectionsToFetch) {
+      const snap = await getDocs(collection(db, collName));
+      snap.forEach(doc => {
+        const data = doc.data();
+        realLikes += parseInt(data.likes || 0);
+        realShares += parseInt(data.shares || 0);
+      });
+    }
+
     const docSnap = await getDoc(generalStatsRef);
 
     if (docSnap.exists()) {
       const data = docSnap.data();
-      document.getElementById('stat-total-visits').innerText = (data.total_visits || 0).toLocaleString('en-US');
-      document.getElementById('stat-total-downloads').innerText = (data.total_downloads || 0).toLocaleString('en-US');
-      document.getElementById('stat-total-likes').innerText = (data.total_likes || 0).toLocaleString('en-US');
-      document.getElementById('stat-total-shares').innerText = (data.total_shares || 0).toLocaleString('en-US');
+      
+      const visitsEl = document.getElementById('stat-total-visits');
+      const downloadsEl = document.getElementById('stat-total-downloads');
+      const likesEl = document.getElementById('stat-total-likes');
+      const sharesEl = document.getElementById('stat-total-shares');
+
+      if(visitsEl) visitsEl.innerText = (data.total_visits || 0).toLocaleString('en-US');
+      if(downloadsEl) downloadsEl.innerText = (data.total_downloads || 0).toLocaleString('en-US');
+      if(likesEl) likesEl.innerText = realLikes.toLocaleString('en-US');
+      if(sharesEl) sharesEl.innerText = realShares.toLocaleString('en-US');
+      
+      // Self-healing data
+      if (data.total_likes !== realLikes || data.total_shares !== realShares) {
+        await updateDoc(generalStatsRef, {
+          total_likes: realLikes,
+          total_shares: realShares
+        });
+      }
     } else {
       await setDoc(generalStatsRef, {
         total_visits: 0,
         total_downloads: 0,
-        total_likes: 0,
-        total_shares: 0,
+        total_likes: realLikes,
+        total_shares: realShares,
         total_clicks: 0
       });
+      const likesEl = document.getElementById('stat-total-likes');
+      const sharesEl = document.getElementById('stat-total-shares');
+      if(likesEl) likesEl.innerText = realLikes.toLocaleString('en-US');
+      if(sharesEl) sharesEl.innerText = realShares.toLocaleString('en-US');
     }
   } catch (error) {
     console.error("خطأ في جلب الإحصائيات العامة:", error);
@@ -256,3 +306,40 @@ export async function trackEvent(collectionName, docId, actionType) {
 
 // ✅ ربط الدالة بالـ window عشان تقدر أزرار الـ HTML اللي فيها (onclick) تستدعيها بدون مشاكل
 window.trackEvent = trackEvent;
+
+/**
+ * دالة لخصم الإحصائيات عند حذف عنصر (مادة، خبر، الخ)
+ * لضمان عدم تراكم أرقام وهمية بعد الحذف.
+ */
+export async function deductStatsOnDelete(item) {
+  if (!item) return;
+  try {
+    const statsRef = doc(db, "genez_analytics", "general_stats");
+    const views = parseInt(item.views || 0);
+    const likes = parseInt(item.likes || 0);
+    const shares = parseInt(item.shares || 0);
+    const downloads = parseInt(item.downloads || 0);
+    const clicks = parseInt(item.clicks || 0);
+
+    if (views === 0 && likes === 0 && shares === 0 && downloads === 0 && clicks === 0) return;
+
+    const snap = await getDoc(statsRef);
+    if (snap.exists()) {
+       const currentStats = snap.data();
+       const updates = {};
+       
+       if (views > 0) updates.total_views = Math.max(0, (currentStats.total_views || 0) - views);
+       if (likes > 0) updates.total_likes = Math.max(0, (currentStats.total_likes || 0) - likes);
+       if (shares > 0) updates.total_shares = Math.max(0, (currentStats.total_shares || 0) - shares);
+       if (downloads > 0) updates.total_downloads = Math.max(0, (currentStats.total_downloads || 0) - downloads);
+       if (clicks > 0) updates.total_clicks = Math.max(0, (currentStats.total_clicks || 0) - clicks);
+       
+       if (Object.keys(updates).length > 0) {
+         await updateDoc(statsRef, updates);
+       }
+    }
+  } catch (error) {
+    console.warn("Analytics Cleanup Notice:", error.message);
+  }
+}
+window.deductStatsOnDelete = deductStatsOnDelete;

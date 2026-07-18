@@ -396,6 +396,10 @@ window.deleteEntireLife = async (id, mainFolderId) => {
     await fetchDriveAPI('life', 'deleteFolder', { folderId: mainFolderId });
   }
   
+  if (item && window.deductStatsOnDelete) {
+    await window.deductStatsOnDelete(item);
+  }
+  
   await deleteDoc(doc(db, "genez_life_connection", String(id)));
   if (item) await logAdminActivity("[قسم الربط مع الحياة] حذف موضوع", item.titleAr || "");
   

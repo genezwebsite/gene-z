@@ -1,0 +1,31 @@
+{
+  "name": "gene-z",
+  "version": "1.0.0",
+  "description": "![Gene-Z Logo](assets/img/favicon-blue.png)",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/style.css --minify",
+    "watch:css": "npx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/style.css --watch",
+    "start": "concurrently \"npm run watch:css\" \"lite-server\"",
+    "dev": "npm start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/essa-07/Gene-Z.Website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/essa-07/Gene-Z.Website/issues"
+  },
+  "homepage": "https://github.com/essa-07/Gene-Z.Website#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "concurrently": "^10.0.3",
+    "lite-server": "^2.6.1",
+    "tailwindcss": "^4.3.3"
+  }
+}

@@ -44,15 +44,38 @@
 
   function highlightActiveNav() {
     const current = window.location.pathname.split("/").pop() || "index.html";
+    const currentBase = current.split("#")[0];
+    const urlParams = new URLSearchParams(window.location.search);
+
     document.querySelectorAll(".nav-link").forEach((link) => {
       const href = link.getAttribute("href") || "";
       const page = href.split("/").pop();
-      link.classList.toggle("active", page === current || (current === "" && page === "index.html"));
+      const pageBase = page.split("#")[0];
+
+      let isActive = (pageBase === currentBase || (currentBase === "" && pageBase === "index.html"));
+      
+      // Handle sub-pages
+      if (currentBase === "course-details.html") {
+        const type = urlParams.get('type');
+        if (type === 'extra' && pageBase === "courses-extra.html") isActive = true;
+        else if (type !== 'extra' && pageBase === "courses.html") isActive = true;
+      }
+      if (currentBase === "life-details.html" && pageBase === "life-connection.html") isActive = true;
+      if (currentBase === "news-details.html" && pageBase === "news.html") isActive = true;
+
+      // Exclusion: Gene-Z section and Study Plan should never be active
+      if (href.includes("#about-us") || href.includes("#study-plan")) {
+        isActive = false;
+      }
+
+      link.classList.toggle("active", isActive);
     });
   }
 
   function bindMobileNav() {
-    const toggle = document.getElementById("mobile-menu-toggle");
+    // There was a bug where mobile-menu-toggle wasn't correctly referenced, we use direct element or event now.
+    // However, keeping the original function structure safe
+    const toggle = document.querySelector("button[aria-label='Open menu']");
     const menu = document.getElementById("mobile-menu");
     if (!toggle || !menu) return;
 
@@ -121,6 +144,38 @@
     window.dispatchEvent(new CustomEvent("genez:lang-changed", { detail: { lang } }));
   }
 
+  async function checkNotifications() {
+    try {
+      // Dynamic import to avoid slowing down main page load
+      const { db } = await import("./firebase-init.js");
+      const { collection, query, orderBy, limit, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      
+      const q = query(collection(db, "genez_updates"), orderBy("timestamp", "desc"), limit(1));
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        const latestDoc = snapshot.docs[0];
+        const latestTime = latestDoc.data().timestamp?.toMillis() || 0;
+        const lastSeen = localStorage.getItem("genez_last_seen_update") || 0;
+        
+        if (latestTime > parseInt(lastSeen)) {
+          document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.remove("hidden"));
+        }
+      }
+    } catch (err) {
+      console.warn("Error checking notifications:", err);
+    }
+  }
+
+  function bindNotificationBell() {
+    document.querySelectorAll("a[href*='updates.html'], a[data-href*='updates.html']").forEach(link => {
+      link.addEventListener("click", () => {
+        localStorage.setItem("genez_last_seen_update", Date.now().toString());
+        document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.add("hidden"));
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     // ✅ تشغيل عدّاد الزيارات اللحظي عبر Dynamic Import (بدون أي تعارض مع المتصفح)
     if (!sessionStorage.getItem("genez_visit_tracked")) {
@@ -140,6 +195,9 @@
       loadComponent("site-navbar", "navbar.html"),
       loadComponent("site-footer", "footer.html"),
     ]);
+
+    checkNotifications();
+    bindNotificationBell();
   });
 
   window.GeneZ = { loadComponent, resolveBasePath: () => COMPONENT_BASE };

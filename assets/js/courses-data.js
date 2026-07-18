@@ -1,13 +1,9 @@
 /**
- * Gene_Z Courses Data Layer
+ * Gene_Z Courses Data Layer (Cloud Firestore Integrated)
  * -----------------------------------------------
- * يدعم الأقسام الأربعة الرسمية للمتطلبات، ويتصل بلوحة التحكم.
+ * يدعم الأقسام الرسمية للمتطلبات، ويتكامل مع التحديث اللحظي في السحابة.
  */
 (function () {
-  // مفاتيح التخزين الموحدة مع لوحة التحكم
-  const STORAGE_KEY = "genez_courses_data";
-  const STUDY_PLAN_KEY = "genez_study_plan";
-
   const CATEGORIES = {
     "major-req": {
       id: "major-req",
@@ -31,7 +27,7 @@
     },
   };
 
-  /* بيانات مبدئية في حال كان الموقع يفتح لأول مرة */
+  /* بيانات مبدئية في حال كانت قاعدة البيانات السحابية فارغة تماماً */
   const DEFAULT_COURSES = [
     {
       id: 1700000000001,
@@ -39,17 +35,7 @@
       nameEn: "Introduction to Biotechnology",
       code: "BIOT-101",
       type: "major-req",
-      files: [
-        {
-          id: "f1",
-          name: "سلايدات الشابتر الأول",
-          url: "https://example.com/slide1.pdf",
-          downloadUrl: "https://example.com/slide1.pdf",
-          sectionKey: "chapters",
-          sectionName: "شباتر المادة",
-          contributor: "د. أحمد"
-        }
-      ]
+      files: []
     },
     {
       id: 1700000000002,
@@ -61,45 +47,8 @@
     }
   ];
 
-  function seedIfEmpty() {
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_COURSES));
-    }
-    if (!localStorage.getItem(STUDY_PLAN_KEY)) {
-      localStorage.setItem(STUDY_PLAN_KEY, JSON.stringify({ tree: null, table: null }));
-    }
-  }
-
-  function getCourses() {
-    seedIfEmpty();
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    } catch {
-      return [...DEFAULT_COURSES];
-    }
-  }
-
-  function saveCourses(courses) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-    window.dispatchEvent(new CustomEvent("genez:courses-updated"));
-  }
-
-  function getStudyPlan() {
-    seedIfEmpty();
-    try {
-      return JSON.parse(localStorage.getItem(STUDY_PLAN_KEY)) || { tree: null, table: null };
-    } catch {
-      return { tree: null, table: null };
-    }
-  }
-
   window.GeneZCourses = {
-    STORAGE_KEY,
-    STUDY_PLAN_KEY,
     CATEGORIES,
-    getCourses,
-    saveCourses,
-    getStudyPlan,
-    seedIfEmpty,
+    DEFAULT_COURSES,
   };
 })();

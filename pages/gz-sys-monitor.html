@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GZ-MONITOR | النظام المركزي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: '#0f172a',
+            'surface-secondary': '#1e293b',
+            theme: '#334155',
+            content: '#f8fafc',
+            muted: '#94a3b8',
+            accent: '#0d9488'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0b0f19; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+  <!-- 1. شاشة تسجيل الدخول السرية -->
+  <div id="secret-login-gate" class="w-full max-w-md bg-surface border border-theme rounded-3xl p-8 shadow-2xl animate-fade-in">
+    <div class="text-center mb-6">
+      <span class="inline-block bg-accent/10 text-accent p-3 rounded-2xl mb-2 text-2xl">🛡️</span>
+      <h1 class="text-xl font-bold text-content">بوابة التدقيق المركزية</h1>
+      <p class="text-xs text-muted mt-1">نظام حماية وسجلات نشاط Gene_Z</p>
+    </div>
+
+    <form id="monitor-auth-form" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-muted mb-1">معرف الوصول (Username)</label>
+        <input type="text" id="secret-user" required autocomplete="off"
+          class="w-full px-4 py-2.5 rounded-xl bg-surface-secondary border border-theme text-sm font-mono text-content focus:outline-none focus:border-accent transition-colors"
+          placeholder="Enter Master User..." />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-muted mb-1">مفتاح التشفير (Password)</label>
+        <input type="password" id="secret-pass" required
+          class="w-full px-4 py-2.5 rounded-xl bg-surface-secondary border border-theme text-sm font-mono text-content focus:outline-none focus:border-accent transition-colors"
+          placeholder="••••••••••••••••" />
+      </div>
+
+      <div id="login-error-msg" class="hidden text-red-500 text-xs font-bold text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+        ❌ بيانات الوصول غير صحيحة!
+      </div>
+
+      <button type="submit" class="w-full py-3 bg-accent hover:bg-teal-700 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-teal-900/40 transition-all duration-300">
+        فك التشفير والوصول لغرفة المراقبة 🚀
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. شاشة غرفة المراقبة والسجلات -->
+  <div id="monitor-dashboard" class="hidden w-full max-w-6xl space-y-6 animate-fade-in py-6">
+    
+    <!-- الترويسة وأزرار التحكم -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface p-6 rounded-3xl border border-theme shadow-lg">
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-xl font-bold text-accent flex items-center gap-2">
+            <span>📜</span>
+            <span>سجل النشاطات السحابي الحي</span>
+          </h2>
+          <span class="bg-teal-500/10 text-teal-400 text-[10px] font-mono px-2.5 py-0.5 rounded-full border border-teal-500/20">LIVE MONITOR</span>
+        </div>
+        <p class="text-xs text-muted mt-1">مراقبة حية لكافة حركات النظام + <span class="text-amber-400 font-bold">تنظيف ذاتي تلقائي للسجلات الأقدم من 30 يوماً</span>.</p>
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <span id="logs-count-badge" class="bg-surface-secondary text-content text-xs font-mono font-bold px-3 py-2 rounded-xl border border-theme whitespace-nowrap">⏳ 0 عملية</span>
+        
+        <button type="button" id="clear-logs-btn" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 text-xs py-2 px-4 rounded-xl font-bold transition-all duration-200">
+          🗑️ مسح كل السجلات نهائياً
+        </button>
+
+        <button type="button" id="logout-monitor-btn" class="bg-surface-secondary hover:bg-theme text-muted hover:text-content text-xs py-2 px-3 rounded-xl font-bold transition-colors" title="إغلاق الجلسة">
+          🔒 خروج
+        </button>
+      </div>
+    </div>
+
+    <!-- 💡 حاوية طلبات اعتماد الأجهزة الجديدة (تظهر تلقائياً عندما يكون هناك طلبات) -->
+    <div id="device-requests-banner" class="hidden space-y-3">
+      <!-- يتم تعبئة الكروت هنا بواسطة الجافاسكريبت -->
+    </div>
+
+    <!-- شريط البحث الفوري -->
+    <div class="bg-surface p-3.5 rounded-2xl border border-theme shadow-md">
+      <input type="text" id="logs-search-input" placeholder="🔍 ابحث بإيميل المشرف، نوع العملية، أو اسم الملف والعنصر..." 
+        class="w-full p-2.5 rounded-xl border border-theme bg-surface-secondary text-xs font-medium text-content focus:outline-none focus:border-accent transition-colors" />
+    </div>
+
+    <!-- جدول عرض السجلات -->
+    <div class="bg-surface rounded-3xl border border-theme shadow-xl overflow-hidden">
+      <div class="overflow-x-auto max-h-[650px]">
+        <table class="w-full text-right border-collapse">
+          <thead class="sticky top-0 bg-surface-secondary text-muted text-[11px] uppercase border-b border-theme font-bold z-10">
+            <tr>
+              <th class="px-5 py-4">المشرف (Email)</th>
+              <th class="px-5 py-4">نوع العملية</th>
+              <th class="px-5 py-4">العنصر المتأثر</th>
+              <th class="px-5 py-4">التاريخ والوقت</th>
+            </tr>
+          </thead>
+          <tbody id="activity-logs-table-body" class="divide-y divide-theme text-xs">
+            <tr><td colspan="4" class="text-center py-10 text-muted">🔒 يرجى تسجيل الدخول أولاً لعرض البيانات...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  <!-- ربط السكربت كموديول -->
+  <script type="module" src="../assets/js/admin/admin-activity.js"></script>
+</body>
+</html>

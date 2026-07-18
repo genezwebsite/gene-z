@@ -1,21 +1,45 @@
 // assets/js/admin/admin-courses.js
 import { fetchDriveAPI, showToast } from "./admin-core.js";
+import { db } from "../firebase-init.js";
+import { 
+  collection, 
+  getDocs, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot,
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let currentCategoryFilter = "all";
 let currentSearchQuery = "";
 const activeUploadLocks = {};
+let cloudAdminCourses = []; // تخزين قائمة المواد القادمة من السحابة
 
-// دالة مساعدة لاستخراج الـ ID من روابط جوجل درايف وتحويلها لرابط صورة مباشر (آمن وبدون شاشة بيضاء)
+// دالة تسجيل النشاطات في مجموعة activity_logs
+async function logAdminActivity(actionType, targetName) {
+  try {
+    const adminEmail = sessionStorage.getItem("adminEmail") || "مشرف غير معروف";
+    const logRef = doc(collection(db, "activity_logs"));
+    await setDoc(logRef, {
+      adminEmail: adminEmail,
+      action: actionType,
+      targetName: targetName,
+      timestamp: serverTimestamp()
+    });
+  } catch (err) {
+    console.error("⚠️ لم يتم حفظ سجل النشاط:", err);
+  }
+}
+
 function getDirectImageUrl(driveUrl, fileId = null) {
   if (!driveUrl && !fileId) return "https://placehold.co/600x400?text=No+Image";
-  
   let id = fileId;
   if (!id && driveUrl) {
     const match = driveUrl.match(/[-\w]{25,}/);
     id = match ? match[0] : null;
   }
-  
-  // إرجاع رابط Thumbnail رسمي ومباشر من سيرفرات جوجل يستطيع المتصفح قراءته كصورة فعلياً
   return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1200` : driveUrl;
 }
 
@@ -24,8 +48,11 @@ export function initCoursesManager() {
   const courseSearchInput = document.getElementById('course-search-input');
   const categoryTabs = document.querySelectorAll('#course-category-tabs .cat-tab');
 
-  renderStudyPlan();
-  renderCoursesAdminList();
+  // 1. الاستماع اللحظي للخطط الدراسية
+  initStudyPlanCloudListener();
+
+  // 2. الاستماع اللحظي لمواد لوحة التحكم
+  initAdminCoursesCloudListener();
 
   document.getElementById('upload-tree-plan')?.addEventListener('change', (e) => handlePlanUpload(e.target, 'tree'));
   document.getElementById('upload-table-plan')?.addEventListener('change', (e) => handlePlanUpload(e.target, 'table'));
@@ -39,29 +66,45 @@ export function initCoursesManager() {
     const saveBtn = document.getElementById('save-course-btn');
 
     saveBtn.disabled = true; 
-    saveBtn.innerText = "جاري الإنشاء...";
+    saveBtn.innerText = "⏳ جاري الإنشاء في Google Drive والسحابة...";
     
-    const driveResult = await fetchDriveAPI('courses', 'create', { folderName: `${nameAr} (${code})`, category: type });
+    try {
+      // إنشاء المجلدات في Google Drive
+      const driveResult = await fetchDriveAPI('courses', 'create', { folderName: `${nameAr} (${code})`, category: type });
 
-    if (driveResult?.success) {
-      const courses = JSON.parse(localStorage.getItem('genez_courses_data') || '[]');
-      courses.push({ 
-        id: Date.now(), 
-        nameAr, 
-        nameEn, 
-        code, 
-        type, 
-        mainFolderId: driveResult.mainFolderId, 
-        subFolders: driveResult.subFolders, 
-        files: [] 
-      });
-      localStorage.setItem('genez_courses_data', JSON.stringify(courses));
-      window.dispatchEvent(new CustomEvent("genez:courses-updated"));
-      addCourseForm.reset(); 
-      renderCoursesAdminList();
+      if (driveResult?.success) {
+        const newId = Date.now();
+        const newCourseData = { 
+          id: newId, 
+          nameAr, 
+          nameEn, 
+          code, 
+          type, 
+          mainFolderId: driveResult.mainFolderId, 
+          subFolders: driveResult.subFolders, 
+          files: [],
+          views: 0,       // ✅ تهيئة عداد مشاهدات المادة بصفر
+          downloads: 0,   // ✅ تهيئة عداد التحميلات بصفر
+          createdAt: serverTimestamp()
+        };
+
+        // الحفظ في Cloud Firestore
+        await setDoc(doc(db, "genez_courses", String(newId)), newCourseData);
+        
+        await logAdminActivity("[قسم المواد] إضافة مادة دراسية جديدة", `[${code}] ${nameAr}`);
+        
+        showToast("✅ تم إنشاء المادة ومجلداتها السحابية بنجاح", "success");
+        addCourseForm.reset(); 
+      } else {
+        showToast("❌ فشل إنشاء المجلدات في Google Drive", "error");
+      }
+    } catch (err) {
+      console.error("Error creating course:", err);
+      showToast("❌ حدث خطأ أثناء الحفظ السحابي", "error");
+    } finally {
+      saveBtn.disabled = false; 
+      saveBtn.innerText = "إنشاء المادة ومجلداتها السحابية 🚀";
     }
-    saveBtn.disabled = false; 
-    saveBtn.innerText = "إنشاء المادة ومجلداتها السحابية 🚀";
   });
 
   courseSearchInput?.addEventListener('input', (e) => { 
@@ -83,8 +126,31 @@ export function initCoursesManager() {
   });
 }
 
-function renderStudyPlan() {
-  const plan = JSON.parse(localStorage.getItem('genez_study_plan') || '{"tree":null,"table":null}');
+function initAdminCoursesCloudListener() {
+  const coursesRef = collection(db, "genez_courses");
+  onSnapshot(coursesRef, (snapshot) => {
+    cloudAdminCourses = [];
+    snapshot.forEach((docSnap) => {
+      cloudAdminCourses.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    cloudAdminCourses.sort((a, b) => (b.id || 0) - (a.id || 0));
+    renderCoursesAdminList();
+  }, (err) => {
+    console.error("❌ خطأ في الاستماع لمواد لوحة التحكم:", err);
+  });
+}
+
+function initStudyPlanCloudListener() {
+  const planRef = doc(db, "genez_settings", "study_plan");
+  onSnapshot(planRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const plan = docSnap.data();
+      renderStudyPlanUI(plan);
+    }
+  });
+}
+
+function renderStudyPlanUI(plan) {
   ['tree', 'table'].forEach(type => {
     if (plan[type]) {
       const nameEl = document.getElementById(`${type}-plan-name`);
@@ -106,31 +172,37 @@ async function handlePlanUpload(fileInput, type) {
     return;
   }
   
+  showToast("⏳ جاري رفع الخطة إلى Google Drive وحفظها في Firestore...", "info");
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const result = await fetchDriveAPI('courses', 'upload', { 
-      targetFolderId: "1EKQhP7Wb2EVDqIpXvUYxS9KurNtbFVHu", 
-      fileName: file.name, 
-      mimeType: file.type, 
-      base64Data: e.target.result.split(',')[1] 
-    });
+    try {
+      const result = await fetchDriveAPI('courses', 'upload', { 
+        targetFolderId: "1EKQhP7Wb2EVDqIpXvUYxS9KurNtbFVHu", 
+        fileName: file.name, 
+        mimeType: file.type, 
+        base64Data: e.target.result.split(',')[1] 
+      });
 
-    if (result?.success) {
-      const plan = JSON.parse(localStorage.getItem('genez_study_plan') || '{"tree":null,"table":null}');
-      
-      // نستخلص الرابط المباشر للصورة من جوجل درايف ونخزنه بشكل منفصل
-      const directImageUrl = getDirectImageUrl(result.fileUrl, result.fileId);
-
-      plan[type] = { 
-        name: result.fileName, 
-        url: result.fileUrl,            // الرابط الأصلي لمعاينة الصفحة كاملة في تبويب جديد
-        previewUrl: directImageUrl,     // الرابط المباشر لوسم <img> بدون بيضاء أو قيود
-        downloadUrl: result.downloadUrl 
-      };
-      
-      localStorage.setItem('genez_study_plan', JSON.stringify(plan)); 
-      renderStudyPlan();
-      showToast("تم تحديث الخطة ومعاينتها بنجاح ✅", "success");
+      if (result?.success) {
+        const directImageUrl = getDirectImageUrl(result.fileUrl, result.fileId);
+        const planData = { 
+          name: result.fileName, 
+          url: result.fileUrl,
+          previewUrl: directImageUrl,
+          downloadUrl: result.downloadUrl 
+        };
+        
+        const planRef = doc(db, "genez_settings", "study_plan");
+        await setDoc(planRef, { [type]: planData }, { merge: true });
+        
+        await logAdminActivity(`[قسم المواد] تحديث الخطة الدراسية (${type === 'tree' ? 'الشجرية' : 'الجدولية'})`, result.fileName);
+        showToast("✅ تم تحديث الخطة وحفظها سحابياً بنجاح", "success");
+      } else {
+        showToast("❌ فشل الرفع إلى Google Drive", "error");
+      }
+    } catch (err) {
+      console.error("Error saving study plan:", err);
+      showToast("❌ حدث خطأ في حفظ الخطة سحابياً", "error");
     }
   };
   reader.readAsDataURL(file);
@@ -139,14 +211,13 @@ async function handlePlanUpload(fileInput, type) {
 function renderCoursesAdminList() {
   const coursesAdminList = document.getElementById('courses-admin-list');
   if (!coursesAdminList) return;
-  const courses = JSON.parse(localStorage.getItem('genez_courses_data') || '[]');
 
-  const filteredCourses = courses.filter(course => {
+  const filteredCourses = cloudAdminCourses.filter(course => {
     const matchesCategory = currentCategoryFilter === "all" || course.type === currentCategoryFilter;
     const matchesSearch = !currentSearchQuery || 
-                          course.nameAr.toLowerCase().includes(currentSearchQuery) || 
-                          course.nameEn.toLowerCase().includes(currentSearchQuery) || 
-                          course.code.toLowerCase().includes(currentSearchQuery);
+                          (course.nameAr || "").toLowerCase().includes(currentSearchQuery) || 
+                          (course.nameEn || "").toLowerCase().includes(currentSearchQuery) || 
+                          (course.code || "").toLowerCase().includes(currentSearchQuery);
     return matchesCategory && matchesSearch;
   });
 
@@ -154,7 +225,7 @@ function renderCoursesAdminList() {
   if (countBadge) countBadge.innerText = `${filteredCourses.length} مادة`;
 
   if (!filteredCourses.length) {
-    coursesAdminList.innerHTML = `<p class="text-muted text-center py-8 text-xs sm:col-span-2 lg:col-span-3 font-medium">لا توجد مواد مطابقة للبحث أو التصنيف الحالي.</p>`; 
+    coursesAdminList.innerHTML = `<p class="text-muted text-center py-8 text-xs sm:col-span-2 lg:col-span-3 font-medium">لا توجد مواد مطابقة للبحث أو التصنيف الحالي في السحابة.</p>`; 
     return;
   }
 
@@ -166,8 +237,8 @@ function renderCoursesAdminList() {
       <div class="p-1.5 bg-surface rounded border border-theme flex items-center justify-between text-[11px] gap-1">
         <div class="min-w-0">
           <span class="text-accent font-bold">👤 ${file.contributor || 'Gene_Z'}:</span>
-          <span class="font-semibold truncate text-content">${file.name}</span>
-          <span class="text-muted text-[10px]">(${file.sectionName})</span>
+          <span class="font-semibold truncate text-content" title="${file.name}">${file.name}</span>
+          <span class="text-muted text-[10px]">(${file.sectionName || ''})</span>
         </div>
         <div class="flex items-center gap-1 shrink-0">
           <a href="${file.url}" target="_blank" class="text-blue-500 hover:underline">معاينة</a>
@@ -183,10 +254,21 @@ function renderCoursesAdminList() {
       <div class="p-3 bg-surface-secondary rounded-lg border border-theme flex flex-col justify-between space-y-2.5 text-xs shadow-sm">
         <div>
           <div class="flex justify-between items-start gap-1">
-            <span class="font-mono bg-accent/10 text-accent font-bold px-1.5 py-0.5 rounded text-[11px]">${course.code}</span>
+            <span class="font-mono bg-accent/10 text-accent font-bold px-1.5 py-0.5 rounded text-[11px]">${course.code || ''}</span>
             <span class="bg-surface px-1.5 py-0.5 rounded text-muted text-[10px] border border-theme">${catLabels[course.type] || 'عام'}</span>
           </div>
-          <h4 class="font-bold text-sm mt-1.5 text-content truncate" title="${course.nameAr}">${course.nameAr}</h4>
+          <h4 class="font-bold text-sm mt-1.5 text-content truncate" title="${course.nameAr || ''}">${course.nameAr || ''}</h4>
+        </div>
+
+        <!-- ✅ شريط عدادات In-Card Stats (المشاهدات والتحميلات) الخاص بالمشرف -->
+        <div class="flex items-center gap-3 text-[11px] font-mono bg-surface px-2.5 py-1 rounded border border-theme w-fit shadow-inner">
+          <span title="عدد المشاهدات والزيارات" class="flex items-center gap-1 text-blue-500 font-bold">
+            👁️ ${course.views || 0}
+          </span>
+          <span class="text-theme">|</span>
+          <span title="إجمالي مرات تنزيل الملفات" class="flex items-center gap-1 text-green-600 font-bold">
+            📥 ${course.downloads || 0}
+          </span>
         </div>
 
         <div class="flex gap-1.5 pt-1 border-t border-theme">
@@ -217,19 +299,17 @@ function renderCoursesAdminList() {
   }).join('');
 }
 
-// تصدير الدوال لكائن window لتصل إليها أزرار الواجهة المضافة ديناميكياً
 window.toggleUploadBox = (courseId) => { 
   document.getElementById(`upload-box-${courseId}`)?.classList.toggle('hidden'); 
 };
 
 window.executeFileUpload = async (courseId) => {
   if (activeUploadLocks[courseId]) { showToast("⏳ يرجى الانتظار...", "info"); return; }
-  const courses = JSON.parse(localStorage.getItem('genez_courses_data') || '[]');
-  const course = courses.find(c => c.id === courseId);
+  const course = cloudAdminCourses.find(c => String(c.id) === String(courseId));
   if (!course) return;
 
   const fileInput = document.getElementById(`file-input-${courseId}`);
-  const file = fileInput.files[0];
+  const file = fileInput?.files[0];
   if (!file) { showToast("اختر ملفاً", "error"); return; }
   if (course.files && course.files.some(f => f.name === file.name)) { 
     showToast("⚠️ هذا الملف موجود مسبقاً في المادة!", "error"); 
@@ -254,9 +334,10 @@ window.executeFileUpload = async (courseId) => {
         mimeType: file.type, 
         base64Data: e.target.result.split(',')[1] 
       });
+      
       if (uploadResult?.success) {
-        if(!course.files) course.files = [];
-        course.files.push({ 
+        const updatedFiles = course.files || [];
+        updatedFiles.push({ 
           id: uploadResult.fileId, 
           name: uploadResult.fileName, 
           url: uploadResult.fileUrl, 
@@ -265,9 +346,18 @@ window.executeFileUpload = async (courseId) => {
           sectionName: course.subFolders[sectionKey].name, 
           contributor: document.getElementById(`contributor-${courseId}`).value.trim() || "فريق Gene_Z" 
         });
-        localStorage.setItem('genez_courses_data', JSON.stringify(courses));
-        window.dispatchEvent(new CustomEvent("genez:courses-updated"));
+        
+        await updateDoc(doc(db, "genez_courses", String(courseId)), { files: updatedFiles });
+        
+        await logAdminActivity("[قسم المواد] رفع ملف جديد", `[${course.code}] ${course.nameAr} -> ${file.name}`);
+        
+        showToast("✅ تم رفع الملف وحفظه سحابياً بنجاح", "success");
+      } else {
+        showToast("❌ فشل الرفع إلى Google Drive", "error");
       }
+    } catch (err) {
+      console.error("File upload error:", err);
+      showToast("❌ حدث خطأ أثناء الرفع السحابي", "error");
     } finally { 
       activeUploadLocks[courseId] = false; 
       renderCoursesAdminList(); 
@@ -277,39 +367,64 @@ window.executeFileUpload = async (courseId) => {
 };
 
 window.syncCourseFiles = async (courseId) => {
-  const courses = JSON.parse(localStorage.getItem('genez_courses_data') || '[]');
-  const course = courses.find(c => c.id === courseId);
+  const course = cloudAdminCourses.find(c => String(c.id) === String(courseId));
   if (!course || !course.subFolders) return;
 
-  const result = await fetchDriveAPI('courses', 'syncFolder', { subFolders: course.subFolders });
-  if (result?.success && result.syncedFiles) {
-    course.files = result.syncedFiles; 
-    localStorage.setItem('genez_courses_data', JSON.stringify(courses));
-    window.dispatchEvent(new CustomEvent("genez:courses-updated"));
-    renderCoursesAdminList();
+  showToast("🔄 جاري مزامنة المجلدات مع Google Drive...", "info");
+  try {
+    const result = await fetchDriveAPI('courses', 'syncFolder', { subFolders: course.subFolders });
+    if (result?.success && result.syncedFiles) {
+      await updateDoc(doc(db, "genez_courses", String(courseId)), { files: result.syncedFiles });
+      
+      await logAdminActivity("[قسم المواد] مزامنة مجلدات المادة", `[${course.code}] ${course.nameAr}`);
+      
+      showToast("✅ تمت المزامنة وتحديث الملفات في Firestore بنجاح!", "success");
+    } else {
+      showToast("❌ فشل جلب المزامنة من Drive", "error");
+    }
+  } catch (err) {
+    console.error("Sync error:", err);
+    showToast("❌ حدث خطأ أثناء المزامنة السحابية", "error");
   }
 };
 
 window.deleteEntireCourse = async (courseId, mainFolderId) => {
-  if (!confirm("تأكيد حذف المادة ونقلها لسلة المهملات السحابية؟")) return;
-  await fetchDriveAPI('courses', 'deleteFolder', { folderId: mainFolderId });
-  const courses = JSON.parse(localStorage.getItem('genez_courses_data') || '[]');
-  localStorage.setItem('genez_courses_data', JSON.stringify(courses.filter(c => c.id !== courseId)));
-  window.dispatchEvent(new CustomEvent("genez:courses-updated"));
-  renderCoursesAdminList(); 
+  if (!confirm("تأكيد حذف المادة ونقلها لسلة المهملات السحابية في Google Drive وحذفها من Firestore؟")) return;
+  try {
+    const courseToDelete = cloudAdminCourses.find(c => String(c.id) === String(courseId));
+    if (mainFolderId && mainFolderId !== 'undefined') {
+      await fetchDriveAPI('courses', 'deleteFolder', { folderId: mainFolderId });
+    }
+    await deleteDoc(doc(db, "genez_courses", String(courseId)));
+    
+    if (courseToDelete) await logAdminActivity("[قسم المواد] حذف مادة دراسية", `[${courseToDelete.code}] ${courseToDelete.nameAr}`);
+    
+    showToast("🗑️ تم حذف المادة ومجلداتها بنجاح", "success");
+  } catch (err) {
+    console.error("Error deleting course:", err);
+    showToast("❌ حدث خطأ أثناء حذف المادة", "error");
+  }
 };
 
 window.deleteCourseFile = async (courseId, fileId) => {
   if (!confirm("تأكيد النقل لسلة مهملات السحابة؟")) return;
-  const result = await fetchDriveAPI('courses', 'deleteFile', { fileId: fileId });
-  if (result?.success) {
-    const courses = JSON.parse(localStorage.getItem('genez_courses_data') || '[]');
-    const course = courses.find(c => c.id === courseId);
-    if (course) { 
-      course.files = course.files.filter(f => f.id !== fileId); 
-      localStorage.setItem('genez_courses_data', JSON.stringify(courses));
-      window.dispatchEvent(new CustomEvent("genez:courses-updated"));
-      renderCoursesAdminList(); 
+  try {
+    const result = await fetchDriveAPI('courses', 'deleteFile', { fileId: fileId });
+    if (result?.success) {
+      const course = cloudAdminCourses.find(c => String(c.id) === String(courseId));
+      if (course) { 
+        const updatedFiles = course.files.filter(f => f.id !== fileId); 
+        await updateDoc(doc(db, "genez_courses", String(courseId)), { files: updatedFiles });
+        
+        await logAdminActivity("[قسم المواد] حذف ملف من مادة", `[${course.code}] ${course.nameAr} -> تم حذف ملف`);
+        
+        showToast("🗑️ تم حذف الملف من السحابة بنجاح", "success");
+      }
+    } else {
+      showToast("❌ فشل حذف الملف من Drive", "error");
     }
+  } catch (err) {
+    console.error("Error deleting file:", err);
+    showToast("❌ حدث خطأ أثناء حذف الملف", "error");
   }
 };

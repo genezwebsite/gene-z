@@ -5,6 +5,7 @@ import { initCoursesManager } from "./admin-courses.js";
 import { initLifeConnectionManager } from "./admin-life-connection.js";
 import { initNewsManager } from "./admin-news.js";
 import { initCoursesExtraManager } from "./admin-courses-extra.js";
+import { initAnalyticsDashboard } from './admin-analytics.js';
 
 // متغيرات الحالة العامة للوحة
 export const DRIVE_APIS = {
@@ -91,12 +92,17 @@ function initNavigation() {
       const targetId = tab.getAttribute('data-target');
       document.getElementById(targetId)?.classList.remove('hidden');
       
+      // ✅ تشغيل محرك الإحصائيات عند فتح قسم الداشبورد فقط
+      if (targetId === 'dashboard-section') {
+        initAnalyticsDashboard();
+      }
+      
       toggleMobileMenu(false);
     });
   });
 }
 
-// تفعيل موديولات الأقسام بمجرد التحقق من الصلاحيات بنجاح (معرفة مرة واحدة فقط)
+// تفعيل موديولات الأقسام بمجرد التحقق من الصلاحيات بنجاح
 export function setupDashboardModules() {
   initUpdatesManager();
   initCoursesManager();

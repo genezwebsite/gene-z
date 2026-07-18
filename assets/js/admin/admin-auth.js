@@ -1,108 +1,226 @@
 // assets/js/admin/admin-auth.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { setupDashboardModules } from "./admin-core.js";
+import { auth, db } from "../firebase-init.js";
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged, 
+  setPersistence, 
+  browserSessionPersistence 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  collection, 
+  setDoc, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { showToast, setupDashboardModules } from "./admin-core.js";
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+let modulesInitialized = false;
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// 💡 دالة ذكية وسريعة لتوليد بصمة فريدة لجهاز/متصفح المشرف (Device Fingerprint)
+function getDeviceFingerprint() {
+  const nav = window.navigator;
+  const screen = window.screen;
+  // دمج معلومات الشاشة، التوقيت المحلي، اللغة، ونظام التشغيل لخلق معرف لا يتغير لنفس المتصفح
+  const rawString = `${nav.userAgent}_${screen.width}x${screen.height}_${nav.language}_${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+  
+  // تحويل النص لرمز فريد قصير (Hash)
+  let hash = 0;
+  for (let i = 0; i < rawString.length; i++) {
+    const char = rawString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return "DEV-" + Math.abs(hash).toString(16).toUpperCase();
+}
 
-const TEST_SESSION_KEY = "genez_admin_test_session";
+// دالة لجلب معلومات مبسطة عن اسم المتصفح والنظام (لعرضها للمالك في الإشعار)
+function getDeviceInfoText() {
+  const ua = window.navigator.userAgent;
+  let os = "OS غير معروف";
+  if (ua.indexOf("Win") !== -1) os = "Windows";
+  if (ua.indexOf("Mac") !== -1) os = "MacOS / iOS";
+  if (ua.indexOf("Android") !== -1) os = "Android";
+  if (ua.indexOf("Linux") !== -1) os = "Linux";
+
+  let browser = "متصفح";
+  if (ua.indexOf("Chrome") !== -1) browser = "Chrome";
+  else if (ua.indexOf("Firefox") !== -1) browser = "Firefox";
+  else if (ua.indexOf("Safari") !== -1 && ua.indexOf("Chrome") === -1) browser = "Safari";
+  else if (ua.indexOf("Edge") !== -1) browser = "Edge";
+
+  return `${browser} على (${os})`;
+}
+
+// دالة لتسجيل النشاطات في Firestore
+async function logSecurityActivity(email, action, target) {
+  try {
+    await setDoc(doc(collection(db, "activity_logs")), {
+      adminEmail: email,
+      action: action,
+      targetName: target,
+      timestamp: serverTimestamp()
+    });
+  } catch (err) { console.error("Log error:", err); }
+}
 
 export function initAuthManager() {
   const loginForm = document.getElementById('login-form');
   const logoutBtn = document.getElementById('logout-btn');
+  const adminGate = document.getElementById('admin-gate');
+  const adminPanel = document.getElementById('admin-panel');
+  const errorMsg = document.getElementById('login-error');
 
-  // 1. مراقبة حالة الـ Firebase والـ LocalStorage بذكاء بدون تصادم
+  // 💡 1. تفعيل الجلسة المؤقتة (تنتهي بإغلاق نافذة المتصفح)
+  setPersistence(auth, browserSessionPersistence).catch(err => console.error("Persistence error:", err));
+
+  // 2. مراقبة حالة المصادقة وفحص بصمة الجهاز
   onAuthStateChanged(auth, async (user) => {
-    // إذا كان هناك مستخدم حقيقي في Firebase
-    if (user) {
+    if (user && db) {
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          renderDashboardUI(userDoc.data());
-          return;
+        sessionStorage.setItem("adminEmail", user.email);
+        localStorage.setItem("adminEmail", user.email);
+
+        const docRef = doc(db, "admin_roles", user.email.toLowerCase());
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const roleData = docSnap.data();
+          const currentDeviceId = getDeviceFingerprint();
+          const currentDeviceInfo = `${getDeviceInfoText()} [ID: ${currentDeviceId}]`;
+
+          let allowedDevices = roleData.allowedDevices || [];
+
+          // أ. حالة أول جهاز يدخل منه المشرف (يتم اعتماده تلقائياً في المصفوفة)
+          if (allowedDevices.length === 0) {
+            allowedDevices = [currentDeviceId];
+            await updateDoc(docRef, { allowedDevices });
+            await logSecurityActivity(user.email, "تسجيل دخول أول واعتماد الجهاز تلقائياً 🛡️", currentDeviceInfo);
+          } 
+          // ب. حالة الدخول من جهاز معتمد مسبقاً
+          else if (allowedDevices.includes(currentDeviceId)) {
+            // تسجيل دخول عادي ونجاح
+          } 
+          // ج. حالة الدخول من جهاز غريب (غير موجود في قائمة allowedDevices)
+          else {
+            // إرسال أو تحديث طلب معلق (pendingDevice) في حسابه ليراه المالك في الغرفة السرية
+            await updateDoc(docRef, {
+              pendingDevice: {
+                id: currentDeviceId,
+                info: currentDeviceInfo,
+                requestedAt: serverTimestamp()
+              }
+            });
+
+            await logSecurityActivity(user.email, "🚨 محاولة دخول محظورة من جهاز غريب (بانتظار اعتماد المالك)", currentDeviceInfo);
+            
+            // طرد المشرف فوراً ومنع وصوله للوحة التحكم
+            await signOut(auth);
+            if (errorMsg) {
+              errorMsg.innerHTML = `⚠️ <b>تم حظر الدخول:</b> هذا الجهاز (${currentDeviceInfo}) غير معتمد لحسابك.<br>تم إرسال طلب اعتماد للمالك (عيسى)، يرجى الانتظار حتى تتم الموافقة عليه.`;
+              errorMsg.classList.remove('hidden');
+            }
+            return;
+          }
+
+          // فتح البوابة وتطبيق الصلاحيات
+          applyRolePermissions(roleData, user.email);
+          if (adminGate) adminGate.classList.add('hidden');
+          if (adminPanel) adminPanel.classList.remove('hidden');
+          
+          if (!modulesInitialized) {
+            setupDashboardModules(); 
+            modulesInitialized = true;
+          }
+        } else {
+          // حساب غير موجود في جداول المشرفين
+          await signOut(auth);
+          if (errorMsg) {
+            errorMsg.innerText = "عذراً، ليس لديك صلاحية إدارية للوصول للوحة التحكم.";
+            errorMsg.classList.remove('hidden');
+          }
         }
-      } catch (error) { 
-        console.error("Error fetching user data:", error); 
+      } catch (error) {
+        console.error("❌ خطأ في جلب الصلاحيات:", error);
+        showToast("حدث خطأ في جلب الصلاحيات من السحابة", "error");
       }
-    } 
-    
-    // إذا لم يكن هناك مستخدم Firebase، نتحقق مما إذا كان قد سجل دخول تجريبي محلياً
-    if (localStorage.getItem(TEST_SESSION_KEY) === "true") {
-      renderDashboardUI({ name: "عيسى (مسترجع)", role: "super_admin", roleTitle: "مدير عام (تجريبي)" });
     } else {
-      // فقط في حال عدم وجود أي نوع من تسجيل الدخول نُظهر البوابة
-      document.getElementById('admin-gate')?.classList.remove("hidden");
-      document.getElementById('admin-panel')?.classList.add("hidden");
+      if (adminGate) adminGate.classList.remove('hidden');
+      if (adminPanel) adminPanel.classList.add('hidden');
+      sessionStorage.removeItem("adminEmail");
+      localStorage.removeItem("adminEmail");
+      modulesInitialized = false;
     }
   });
 
-  // 2. التعامل مع زر تسجيل الدخول
-  loginForm?.addEventListener('submit', async (e) => {
+  // 3. تسجيل الدخول الحقيقي
+  loginForm?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const loginError = document.getElementById('login-error');
+    const email = document.getElementById('login-email')?.value.trim();
+    const pass = document.getElementById('login-password')?.value;
+    const btn = loginForm.querySelector('button');
 
-    try {
-      // محاولة تسجيل الدخول الحقيقي عبر الـ Firebase أولاً
-      await signInWithEmailAndPassword(auth, email, password);
-      loginError?.classList.add('hidden');
-    } catch (error) {
-      console.warn("Firebase Auth failed, falling back to experimental login.");
-      // Fallback لتسجيل الدخول التجريبي عند فشل الاتصال بالسيرفر
-      localStorage.setItem(TEST_SESSION_KEY, "true");
-      loginError?.classList.add('hidden');
-      renderDashboardUI({ name: "عيسى", role: "super_admin", roleTitle: "مدير عام (تجريبي)" });
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = "جاري التحقق من السحابة...";
     }
+    if (errorMsg) errorMsg.classList.add('hidden');
+
+    signInWithEmailAndPassword(auth, email, pass)
+      .then(() => {
+        if (btn) btn.innerText = "نجاح! جاري فحص بصمة الجهاز...";
+        showToast("جاري فحص أمان الجهاز...", "info");
+      })
+      .catch((error) => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = "تسجيل الدخول";
+        }
+        if (errorMsg) {
+          errorMsg.innerText = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+          errorMsg.classList.remove('hidden');
+        }
+      });
   });
 
-  // 3. زر تسجيل الخروج
-  logoutBtn?.addEventListener('click', async () => {
-    try {
-      await signOut(auth);
-    } catch (err) { console.error(err); }
-    localStorage.removeItem(TEST_SESSION_KEY);
-    window.location.reload(); // إعادة تحميل الواجهة لتنظيف الذاكرة
+  logoutBtn?.addEventListener('click', () => {
+    signOut(auth).then(() => {
+      sessionStorage.removeItem("adminEmail");
+      localStorage.removeItem("adminEmail");
+      showToast("تم تسجيل الخروج من السحابة", "info");
+      setTimeout(() => window.location.reload(), 1000);
+    });
   });
 }
 
-function renderDashboardUI(userData) {
-  // إخفاء شاشة الدخول وإظهار اللوحة الأساسية
-  document.getElementById('admin-gate')?.classList.add('hidden');
-  document.getElementById('admin-panel')?.classList.remove('hidden');
-  
-  const welcomeName = document.getElementById('admin-welcome-name');
+function applyRolePermissions(roleData, email) {
+  const adminNameEl = document.getElementById('admin-welcome-name');
   const roleBadge = document.getElementById('admin-role-badge');
-  if (welcomeName) welcomeName.innerText = `مرحباً، ${userData.name || 'أدمن'}`;
-  if (roleBadge) roleBadge.innerText = userData.roleTitle || 'مشرف';
-
-  // إدارة الصلاحيات والتبويبات
-  const adminTabs = document.querySelectorAll('.admin-tab');
-  adminTabs.forEach(tab => tab.style.display = 'none');
-
-  if (userData.role === 'super_admin') {
-    adminTabs.forEach(tab => tab.style.display = 'block');
-    document.querySelector('[data-target="dashboard-section"]')?.click();
-  } else {
-    const targetTab = document.querySelector(`[data-target="${userData.allowedSection}"]`);
-    if (targetTab) { 
-      targetTab.style.display = 'block'; 
-      targetTab.click(); 
-    }
-  }
+  const allTabs = document.querySelectorAll('.admin-tab');
   
-  // تشغيل بقية موديولات الأقسام فور فتح اللوحة
-  setupDashboardModules();
+  if (adminNameEl) adminNameEl.innerText = roleData.name || email.split('@')[0];
+  
+  if (roleData.role === 'owner') {
+    if (roleBadge) {
+      roleBadge.innerText = "المالك (Owner)";
+      roleBadge.classList.replace('bg-accent', 'bg-red-600');
+    }
+    allTabs.forEach(tab => tab.style.display = 'block');
+  } else {
+    if (roleBadge) {
+      roleBadge.innerText = "مشرف قسم";
+      roleBadge.classList.replace('bg-red-600', 'bg-accent');
+    }
+    const allowedSections = roleData.allowedSections || [];
+    allTabs.forEach(tab => {
+      const target = tab.getAttribute('data-target');
+      if (target === 'dashboard-section' || allowedSections.includes(target)) {
+        tab.style.display = 'block'; 
+      } else {
+        tab.style.display = 'none';
+      }
+    });
+  }
 }

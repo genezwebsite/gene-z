@@ -1,6 +1,7 @@
 /**
  * Gene_Z — Shared runtime
  * Loads reusable HTML components, translates UI, and highlights active navigation.
+ * Integrated safely with Cloud-Native Analytics Engine using Dynamic Import.
  */
 
 (function () {
@@ -24,7 +25,7 @@
       highlightActiveNav();
       bindMobileNav();
       bindThemeToggles();
-      bindLanguageToggle(); // تفعيل زر اللغة بعد تحميل الهيدر
+      bindLanguageToggle();
     } catch (err) {
       console.warn("[Gene_Z] Component load error:", err.message);
     }
@@ -74,9 +75,6 @@
     });
   }
 
-  // ==========================================
-  // نظام الترجمة وإدارة اللغة (Language Logic)
-  // ==========================================
   function bindLanguageToggle() {
     const langBtn = document.getElementById("lang-toggle");
     if (langBtn && !langBtn.dataset.bound) {
@@ -87,7 +85,6 @@
         applyLanguage(currentLang);
       });
     }
-    // تطبيق اللغة فوراً على العناصر التي تم تحميلها
     const savedLang = localStorage.getItem("gene_z_lang") || "ar";
     applyLanguage(savedLang);
   }
@@ -96,23 +93,19 @@
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
     
-    // تغيير الخطوط بناءً على اللغة ليكون الشكل أنظف
     if (lang === "en") {
       document.body.style.setProperty("font-family", "'Inter', sans-serif", "important");
     } else {
       document.body.style.setProperty("font-family", "'Noto Kufi Arabic', sans-serif", "important");
     }
 
-    // تبديل النصوص للعناصر التي تحتوي على data-en
     document.querySelectorAll("[data-en]").forEach(el => {
-      // التحقق إذا كان العنصر هو حقل إدخال (Input/Textarea) لتغيير الـ placeholder
       if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
         if (!el.hasAttribute("data-ar")) {
           el.setAttribute("data-ar", el.getAttribute("placeholder") || "");
         }
         el.setAttribute("placeholder", lang === "en" ? el.getAttribute("data-en") : el.getAttribute("data-ar"));
       } else {
-        // للعناصر العادية نغير الـ innerHTML
         if (!el.hasAttribute("data-ar")) {
           el.setAttribute("data-ar", el.innerHTML);
         }
@@ -120,18 +113,25 @@
       }
     });
 
-    // تحديث نص زر اللغة
     const langLabel = document.getElementById("lang-label");
     if (langLabel) {
       langLabel.textContent = lang === "ar" ? "EN" : "عربي";
     }
 
-    // إرسال إشارة لكل الموقع بتغير اللغة (لإعادة رسم البطاقات في الـ JS بدون Refresh)
     window.dispatchEvent(new CustomEvent("genez:lang-changed", { detail: { lang } }));
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
-    // تطبيق اللغة على محتوى الصفحة الأساسي قبل تحميل المكونات
+    // ✅ تشغيل عدّاد الزيارات اللحظي عبر Dynamic Import (بدون أي تعارض مع المتصفح)
+    if (!sessionStorage.getItem("genez_visit_tracked")) {
+      import("./admin/admin-analytics.js")
+        .then((mod) => {
+          mod.trackEvent(null, null, "visits");
+        })
+        .catch((err) => console.warn("Analytics tracking error:", err));
+      sessionStorage.setItem("genez_visit_tracked", "true");
+    }
+
     const savedLang = localStorage.getItem("gene_z_lang") || "ar";
     applyLanguage(savedLang);
 

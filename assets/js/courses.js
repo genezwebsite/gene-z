@@ -1,12 +1,72 @@
 /**
- * Gene_Z Courses Display & Filter Script
+ * Gene_Z Courses Display & Filter Script (Cloud Firestore Integrated)
  * -----------------------------------------------
- * يتعامل مع عرض بطاقات المواد، الفلترة الفورية، والبحث الشامل.
+ * يتعامل مع عرض بطاقات المواد سحابياً، الفلترة الفورية، والبحث الشامل مع نظام الإحصائيات اللحظية.
  */
+import { db } from "./firebase-init.js";
+import { 
+  collection, 
+  doc, 
+  onSnapshot 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// ✅ استيراد محرك التتبع الإحصائي اللحظي
+import { trackEvent } from "./admin/admin-analytics.js";
+
 (function () {
-  // التبويب الافتراضي: متطلبات تخصص إجبارية[cite: 9]
   let activeCategory = "major-req";
   let searchQuery = "";
+  let cloudCourses = []; // التخزين البرمجي للمواد القادمة من السحابة
+
+  /**
+   * تهيئة الاستماع اللحظي للمواد والخطة الدراسية من Cloud Firestore
+   */
+  function initCloudCoursesListener() {
+    const coursesRef = collection(db, "genez_courses");
+    onSnapshot(coursesRef, (snapshot) => {
+      cloudCourses = [];
+      snapshot.forEach((docSnap) => {
+        cloudCourses.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      if (cloudCourses.length === 0 && window.GeneZCourses?.DEFAULT_COURSES) {
+        cloudCourses = [...window.GeneZCourses.DEFAULT_COURSES];
+      }
+
+      renderTabs();
+      renderCourses();
+    }, (error) => {
+      console.error("❌ خطأ في جلب المواد من السحابة:", error);
+    });
+
+    const planRef = doc(db, "genez_settings", "study_plan");
+    onSnapshot(planRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const plan = docSnap.data();
+        updatePublicStudyPlanUI(plan);
+      }
+    });
+  }
+
+  function updatePublicStudyPlanUI(plan) {
+    ['tree', 'table'].forEach(type => {
+      if (plan[type]) {
+        const viewEl = document.getElementById(`public-${type}-view`);
+        const downEl = document.getElementById(`public-${type}-download`);
+        if (viewEl) { 
+          viewEl.href = plan[type].url; 
+          viewEl.classList.remove('hidden'); 
+          // ✅ تسجيل المشاهدة عند الضغط على معاينة الخطة
+          viewEl.onclick = () => trackEvent("genez_settings", "study_plan", "views");
+        }
+        if (downEl) { 
+          downEl.href = plan[type].downloadUrl || plan[type].url; 
+          downEl.classList.remove('hidden'); 
+          // ✅ تسجيل التحميل عند الضغط على تحميل الخطة
+          downEl.onclick = () => trackEvent("genez_settings", "study_plan", "downloads");
+        }
+      }
+    });
+  }
 
   function renderTabs() {
     const container = document.getElementById("course-tabs");
@@ -47,12 +107,10 @@
     const isGlobalSearch = q.length > 0;
 
     return courses.filter((c) => {
-      // فحص التصنيف (إذا لم يكن هناك بحث شامل)[cite: 8]
       const courseCat = c.type || c.category;
       if (!isGlobalSearch && courseCat !== activeCategory) return false;
       if (!q) return true;
 
-      // البحث في العربي، الإنجليزي، ورمز المادة[cite: 8]
       const nameEn = (c.nameEn || c.titleEn || c.title || "").toLowerCase();
       const nameAr = (c.nameAr || c.titleAr || c.title || "").toLowerCase();
       const code = (c.code || "").toLowerCase();
@@ -62,6 +120,8 @@
   }
 
   function navigateToCourse(courseId) {
+    // ✅ إرسال حدث المشاهدة (View) لمحرك الإحصائيات قبل الانتقال لصفحة تفاصيل المادة
+    trackEvent("genez_courses", String(courseId), "views");
     window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
   }
 
@@ -84,7 +144,7 @@
     if (!grid || !window.GeneZCourses) return;
 
     const isGlobalSearch = searchQuery.trim().length > 0;
-    const courses = filterCourses(GeneZCourses.getCourses());
+    const courses = filterCourses(cloudCourses);
     const lang = localStorage.getItem("gene_z_lang") || "ar";
 
     if (countEl) countEl.textContent = courses.length;
@@ -134,10 +194,10 @@
           <h3 class="text-base font-bold leading-snug group-hover:text-accent transition-colors pt-1">${title}</h3>
         </div>
         
-        <div class="pt-3 border-t border-theme flex justify-between items-center">
-          ${filesBadge}
-          <span class="text-xs font-bold text-accent group-hover:translate-x-[-4px] transition-transform rtl:inline-block">عرض التفاصيل &larr;</span>
-        </div>
+        <!-- ✅ عرض عداد المشاهدات والتحميلات للطلاب في أسفل بطاقة المادة -->
+        <div class="pt-3 border-t border-theme flex justify-between items-center text-xs">
+          <div class="flex items-center gap-2">
+            ${filesBadge}
       </article>`;
       })
       .join("");
@@ -162,12 +222,9 @@
   }
 
   function init() {
-    GeneZCourses.seedIfEmpty();
-    renderTabs();
-    renderCourses();
+    initCloudCoursesListener();
     initSearch();
 
-    window.addEventListener("genez:courses-updated", () => renderCourses());
     window.addEventListener("genez:lang-changed", () => {
       renderTabs();
       renderCourses();

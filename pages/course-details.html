@@ -15,7 +15,6 @@
 
   <style>
     body { font-family: 'Noto Kufi Arabic', sans-serif; }
-    /* تنسيق التبويبات */
     .file-tab.active {
       color: var(--color-accent);
       border-bottom-color: var(--color-accent);
@@ -48,7 +47,7 @@
       <!-- الحاوية الرئيسية لتفاصيل المادة -->
       <div id="course-content" class="min-h-[40vh] relative">
         <div class="card p-10 flex justify-center items-center h-full">
-          <span class="text-muted font-semibold">جاري تحميل بيانات المادة...</span>
+          <span class="text-muted font-semibold">جاري تحميل بيانات المادة من السحابة...</span>
         </div>
       </div>
 
@@ -57,27 +56,41 @@
 
   <div id="site-footer"></div>
 
-  <script src="../assets/js/courses-data.js"></script>
   <script src="../assets/js/main.js"></script>
+  
+  <!-- السكربت الجديد للاتصال المباشر بقاعدة بيانات فايربيز -->
+  <script type="module">
+    import { db } from "../assets/js/firebase-init.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    
+    // استيراد دالة تتبع التفاعل اللحظي (لتسجيل مرات التحميل)
+    import { trackEvent } from "../assets/js/admin/admin-analytics.js";
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       const container = document.getElementById("course-content");
       const urlParams = new URLSearchParams(window.location.search);
       const courseId = urlParams.get("id");
 
-      if (!courseId || !window.GeneZCourses) {
-        showError("لم يتم العثور على المادة المطلوبة."); return;
+      if (!courseId) {
+        showError("لم يتم العثور على المادة المطلوبة في الرابط."); return;
       }
 
-      const courses = GeneZCourses.getCourses();
-      const course = courses.find(c => String(c.id) === String(courseId));
+      try {
+        // ✅ جلب البيانات من Cloud Firestore بدلاً من الملف الثابت المحذوف
+        const docRef = doc(db, "genez_courses", courseId);
+        const docSnap = await getDoc(docRef);
 
-      if (!course) {
-        showError("هذه المادة غير موجودة في السجل أو تم حذفها."); return;
+        if (!docSnap.exists()) {
+          showError("هذه المادة غير موجودة في السحابة أو تم حذفها مؤخراً."); return;
+        }
+
+        const course = { id: docSnap.id, ...docSnap.data() };
+        renderCourseDetails(course);
+
+      } catch (error) {
+        console.error("Error fetching course details:", error);
+        showError("حدث خطأ أثناء جلب بيانات المادة من السحابة. يرجى التأكد من اتصالك بالإنترنت.");
       }
-
-      renderCourseDetails(course);
 
       function showError(message) {
         container.innerHTML = `
@@ -88,11 +101,12 @@
           </div>`;
       }
 
-      function createFileCard(file) {
+      function createFileCard(file, courseId) {
         const contributor = file.contributor || "فريق Gene_Z";
         const viewUrl = file.url || "#";
         const downUrl = file.downloadUrl || file.url || "#";
         
+        // دالة onClick لتسجيل نقرة التحميل
         return `
           <div class="p-4 rounded-xl border border-theme bg-surface hover:border-accent hover:shadow-md transition-all flex flex-col justify-between gap-3 group">
             <div class="space-y-1.5">
@@ -100,20 +114,21 @@
               <h4 class="font-bold text-sm text-content group-hover:text-accent transition-colors leading-snug" title="${file.name}">📄 ${file.name}</h4>
             </div>
             <div class="flex gap-2 pt-2 border-t border-theme">
-              <a href="${viewUrl}" target="_blank" class="btn-outline flex-1 text-center py-1.5 text-xs rounded font-semibold text-blue-600 border-blue-200 hover:bg-blue-50">👁️ معاينة</a>
-              <a href="${downUrl}" target="_blank" download class="btn-primary flex-1 text-center py-1.5 text-xs rounded font-semibold">⬇️ تنزيل</a>
+              <a href="${viewUrl}" target="_blank" class="btn-outline flex-1 text-center py-1.5 text-xs rounded font-semibold text-blue-600 border-blue-200 hover:bg-blue-50"> معاينة</a>
+              <!-- ✅ تسجيل حدث التحميل (Downloads) قبل الفتح -->
+              <a href="${downUrl}" target="_blank" download onclick="window.trackEvent('genez_courses', '${courseId}', 'downloads');" class="btn-primary flex-1 text-center py-1.5 text-xs rounded font-semibold">⬇️ تنزيل</a>
             </div>
           </div>
         `;
       }
 
       function renderCourseDetails(course) {
-        const titleAr = course.nameAr || course.titleAr || course.title;
+        const titleAr = course.nameAr || course.titleAr || course.title || "مادة دراسية";
         const titleEn = course.nameEn || course.titleEn || "";
-        const code = course.code || "BIOT";
-        const courseCat = course.type || course.category;
-        const catObj = GeneZCourses.CATEGORIES[courseCat];
-        const categoryLabel = catObj ? catObj.labelAr : "متطلب عام";
+        const code = course.code || "";
+        
+        const catLabels = { "major-req": "تخصص إجباري", "major-opt": "تخصص اختياري", "college-req": "كلية إجبارية", "college-opt": "كلية اختيارية" };
+        const categoryLabel = catLabels[course.type] || "متطلب عام";
         
         const files = course.files || course.resources || [];
         const chapters = files.filter(f => f.sectionKey === 'chapters' || !f.sectionKey);
@@ -122,7 +137,6 @@
 
         const noFilesHTML = `<div class="col-span-full text-center py-8"><p class="text-sm text-muted font-medium bg-surface-secondary p-4 rounded-lg border border-theme inline-block">لا توجد ملفات مرفوعة في هذا القسم حالياً.</p></div>`;
 
-        // دمج الهيدر والتبويبات
         container.innerHTML = `
           <!-- هيدر المادة -->
           <div class="card p-6 sm:p-8 mb-6 bg-surface shadow-sm border-theme border-b-4 border-b-accent">
@@ -144,24 +158,23 @@
           <!-- صناديق الملفات -->
           <div id="chapters-sec" class="file-section block">
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              ${chapters.length > 0 ? chapters.map(createFileCard).join('') : noFilesHTML}
+              ${chapters.length > 0 ? chapters.map(f => createFileCard(f, course.id)).join('') : noFilesHTML}
             </div>
           </div>
 
           <div id="summaries-sec" class="file-section hidden">
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              ${summaries.length > 0 ? summaries.map(createFileCard).join('') : noFilesHTML}
+              ${summaries.length > 0 ? summaries.map(f => createFileCard(f, course.id)).join('') : noFilesHTML}
             </div>
           </div>
 
           <div id="pastpapers-sec" class="file-section hidden">
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              ${pastPapers.length > 0 ? pastPapers.map(createFileCard).join('') : noFilesHTML}
+              ${pastPapers.length > 0 ? pastPapers.map(f => createFileCard(f, course.id)).join('') : noFilesHTML}
             </div>
           </div>
         `;
 
-        // برمجة التبديل بين التبويبات (Tabs Logic)
         const tabs = container.querySelectorAll('.file-tab');
         const sections = container.querySelectorAll('.file-section');
 

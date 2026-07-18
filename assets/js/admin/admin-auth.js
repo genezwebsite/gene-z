@@ -13,7 +13,8 @@ import {
   updateDoc, 
   collection, 
   setDoc, 
-  serverTimestamp 
+  serverTimestamp,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { showToast, setupDashboardModules } from "./admin-core.js";
 
@@ -116,12 +117,48 @@ export function initAuthManager() {
 
             await logSecurityActivity(user.email, "🚨 محاولة دخول محظورة من جهاز غريب (بانتظار اعتماد المالك)", currentDeviceInfo);
             
-            // طرد المشرف فوراً ومنع وصوله للوحة التحكم
-            await signOut(auth);
+            // بدلاً من الطرد، نضعه في حالة انتظار وتحديث حي
             if (errorMsg) {
-              errorMsg.innerHTML = `⚠️ <b>تم حظر الدخول:</b> هذا الجهاز (${currentDeviceInfo}) غير معتمد لحسابك.<br>تم إرسال طلب اعتماد للمالك (عيسى)، يرجى الانتظار حتى تتم الموافقة عليه.`;
+              errorMsg.innerHTML = `⚠️ <b>تم تعليق الدخول:</b> هذا الجهاز (${currentDeviceInfo}) غير معتمد لحسابك.<br>تم إرسال طلب اعتماد للمالك، <b>يرجى الانتظار هنا...</b> سيبدأ الدخول تلقائياً فور الموافقة ⏳`;
               errorMsg.classList.remove('hidden');
+              errorMsg.classList.remove('text-red-600', 'bg-red-50');
+              errorMsg.classList.add('text-amber-700', 'bg-amber-50');
             }
+            
+            const btn = loginForm?.querySelector('button');
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML = `<span class="animate-pulse">جاري انتظار الموافقة من المالك...</span>`;
+            }
+
+            // مراقبة المستند لحظياً (Real-time listener)
+            const unsubscribe = onSnapshot(docRef, (snap) => {
+              if (snap.exists()) {
+                const newData = snap.data();
+                if (newData.allowedDevices && newData.allowedDevices.includes(currentDeviceId)) {
+                  unsubscribe(); // إيقاف المراقبة عند الموافقة
+                  if (errorMsg) {
+                    errorMsg.innerHTML = `✅ <b>تمت الموافقة!</b> جاري تسجيل الدخول...`;
+                    errorMsg.classList.remove('text-amber-700', 'bg-amber-50');
+                    errorMsg.classList.add('text-green-600', 'bg-green-50');
+                  }
+                  if (btn) {
+                    btn.innerText = "نجاح! جاري تحضير لوحة التحكم...";
+                  }
+                  
+                  setTimeout(() => {
+                    applyRolePermissions(newData, user.email);
+                    if (adminGate) adminGate.classList.add('hidden');
+                    if (adminPanel) adminPanel.classList.remove('hidden');
+                    
+                    if (!modulesInitialized) {
+                      setupDashboardModules(); 
+                      modulesInitialized = true;
+                    }
+                  }, 1000);
+                }
+              }
+            });
             return;
           }
 

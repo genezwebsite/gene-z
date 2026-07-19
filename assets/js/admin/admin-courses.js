@@ -235,10 +235,10 @@ function renderCoursesAdminList() {
     const filesCount = course.files ? course.files.length : 0;
     const filesHTML = filesCount > 0 ? course.files.map(file => `
       <div class="p-1.5 bg-surface rounded border border-theme flex items-center justify-between text-[11px] gap-1">
-        <div class="min-w-0">
-          <span class="text-accent font-bold">👤 ${file.contributor || 'Gene_Z'}:</span>
-          <span class="font-semibold truncate text-content" title="${file.name}">${file.name}</span>
-          <span class="text-muted text-[10px]">(${file.sectionName || ''})</span>
+        <div class="flex items-center gap-1 min-w-0 flex-1">
+          <span class="text-accent font-bold shrink-0">👤 ${file.contributor || 'Gene_Z'}:</span>
+          <span class="font-semibold truncate text-content block" title="${file.name}">${file.name}</span>
+          <span class="text-muted text-[10px] shrink-0">(${file.sectionName || ''})</span>
         </div>
         <div class="flex items-center gap-1 shrink-0">
           <a href="${file.url}" target="_blank" class="text-blue-500 hover:underline">معاينة</a>

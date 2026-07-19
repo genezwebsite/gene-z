@@ -176,8 +176,8 @@ import { trackEvent } from "./admin/admin-analytics.js";
         const strictUrl = getStrictPreviewUrl(file.url);
         return `
           <div class="p-4 bg-surface rounded-xl border border-theme flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:border-accent transition-all">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="text-accent text-2xl">📄</span>
+            <div class="flex items-center gap-3 min-w-0 flex-1 w-full">
+              <span class="text-accent text-2xl shrink-0">📄</span>
               <div class="min-w-0">
                 <h4 class="font-bold text-sm text-content truncate">${file.name}</h4>
                 <span class="text-[11px] text-muted font-mono">👤 ${file.contributor || topic.author || 'Gene_Z'}</span>

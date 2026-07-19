@@ -228,9 +228,9 @@ async function renderNewsList() {
 
       const filesHTML = filesCount > 0 ? item.files.map(file => `
         <div class="p-2 bg-surface rounded border border-theme flex items-center justify-between text-[11px] gap-2">
-          <div class="min-w-0 flex items-center gap-1.5">
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${file.langKey === 'en' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'}">${file.langKey === 'en' ? 'EN' : 'AR'}</span>
-            <span class="font-semibold truncate text-content" title="${file.name}">${file.name}</span>
+          <div class="min-w-0 flex items-center gap-1.5 flex-1">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${file.langKey === 'en' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'} shrink-0">${file.langKey === 'en' ? 'EN' : 'AR'}</span>
+            <span class="font-semibold truncate text-content block" title="${file.name}">${file.name}</span>
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <a href="${file.url}" target="_blank" class="text-blue-500 hover:underline font-bold text-[11px]">معاينة</a>

@@ -79,19 +79,9 @@ function initNavigation() {
     }
   }
 
-  function bindTapEvent(el, callback) {
-    if (!el) return;
-    const handler = (e) => {
-      if (e.type === 'touchend') e.preventDefault();
-      callback(e);
-    };
-    el.addEventListener('click', handler);
-    el.addEventListener('touchend', handler);
-  }
-
-  bindTapEvent(mobileMenuBtn, () => toggleMobileMenu(true));
-  bindTapEvent(closeMobileMenuBtn, () => toggleMobileMenu(false));
-  bindTapEvent(mobileOverlay, () => toggleMobileMenu(false));
+  mobileMenuBtn?.addEventListener('click', () => toggleMobileMenu(true));
+  closeMobileMenuBtn?.addEventListener('click', () => toggleMobileMenu(false));
+  mobileOverlay?.addEventListener('click', () => toggleMobileMenu(false));
 
   adminTabs.forEach(tab => {
     tab.addEventListener('click', () => {

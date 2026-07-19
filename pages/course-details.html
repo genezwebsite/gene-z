@@ -143,6 +143,23 @@
 
         const noFilesHTML = `<div class="col-span-full text-center py-8"><p class="text-sm text-muted font-medium bg-surface-secondary p-4 rounded-lg border border-theme inline-block">لا توجد ملفات مرفوعة في هذا القسم حالياً.</p></div>`;
 
+        function linkify(text) {
+          if(!text) return "";
+          const urlRegex = /(https?:\/\/[^\s]+)/g;
+          return text.replace(urlRegex, function(url) {
+            return '<a href="' + url + '" target="_blank" class="text-blue-600 hover:underline font-bold inline-block break-all" dir="ltr">' + url + '</a>';
+          }).replace(/\n/g, '<br>');
+        }
+
+        const detailsHTML = course.details ? `
+          <div class="card p-5 mb-6 bg-surface-secondary border border-theme rounded-xl shadow-sm">
+            <h3 class="font-bold text-sm text-accent mb-2 flex items-center gap-2"><span>📌</span> ملاحظات وتفاصيل المادة</h3>
+            <div class="text-sm text-content leading-relaxed font-medium">
+              ${linkify(course.details)}
+            </div>
+          </div>
+        ` : "";
+
         container.innerHTML = `
           <!-- هيدر المادة -->
           <div class="card p-6 sm:p-8 mb-6 bg-surface shadow-sm border-theme border-b-4 border-b-accent">
@@ -153,6 +170,8 @@
             <h1 class="text-2xl sm:text-3xl font-bold text-content mb-1">${titleAr}</h1>
             ${titleEn ? `<p class="text-sm text-muted font-mono" dir="ltr">${titleEn}</p>` : ""}
           </div>
+
+          ${detailsHTML}
 
           <!-- نظام التبويبات للأقسام -->
           <div class="mb-6 border-b border-theme flex flex-wrap gap-2" id="course-file-tabs">

@@ -63,6 +63,7 @@ export function initCoursesManager() {
     const nameEn = document.getElementById('course-name-en').value.trim();
     const code = document.getElementById('course-code').value.trim();
     const type = document.getElementById('course-type').value;
+    const details = document.getElementById('course-details')?.value.trim() || '';
     const saveBtn = document.getElementById('save-course-btn');
 
     saveBtn.disabled = true; 
@@ -83,6 +84,7 @@ export function initCoursesManager() {
           mainFolderId: driveResult.mainFolderId, 
           subFolders: driveResult.subFolders, 
           files: [],
+          details: details,
           views: 0,       // ✅ تهيئة عداد مشاهدات المادة بصفر
           downloads: 0,   // ✅ تهيئة عداد التحميلات بصفر
           createdAt: serverTimestamp()
@@ -271,8 +273,9 @@ function renderCoursesAdminList() {
           </span>
         </div>
 
-        <div class="flex gap-1.5 pt-1 border-t border-theme">
-          <button type="button" onclick="toggleUploadBox(${course.id})" class="btn-primary flex-1 py-1 text-[11px] font-semibold rounded" ${isLocked ? 'disabled' : ''}>${uploadBtnText}</button>
+        <div class="flex gap-1.5 pt-1 border-t border-theme flex-wrap">
+          <button type="button" onclick="toggleUploadBox(${course.id})" class="btn-primary flex-1 py-1 text-[11px] font-semibold rounded min-w-[70px]" ${isLocked ? 'disabled' : ''}>${uploadBtnText}</button>
+          <button type="button" onclick="openEditDetailsModal(${course.id})" class="btn-outline text-amber-600 border-amber-200 hover:bg-amber-50 py-1 px-2 text-[11px] rounded">✏️ تفاصيل</button>
           <button type="button" onclick="syncCourseFiles(${course.id})" class="btn-outline text-blue-600 border-blue-200 hover:bg-blue-50 py-1 px-2 text-[11px] rounded">🔄 مزامنة</button>
           <button type="button" onclick="deleteEntireCourse(${course.id}, '${course.mainFolderId}')" class="btn-outline text-red-600 border-red-200 hover:bg-red-50 py-1 px-2 text-[11px] rounded">🗑️</button>
         </div>
@@ -446,3 +449,42 @@ window.deleteCourseFile = async (courseId, fileId) => {
     activeUploadLocks[courseId] = false;
   }
 };
+
+let currentEditingCourseId = null;
+
+window.openEditDetailsModal = (courseId) => {
+  const course = cloudAdminCourses.find(c => String(c.id) === String(courseId));
+  if (!course) return;
+  currentEditingCourseId = courseId;
+  const inputEl = document.getElementById('edit-course-details-input');
+  if (inputEl) inputEl.value = course.details || '';
+  document.getElementById('edit-course-details-modal')?.classList.remove('hidden');
+};
+
+window.closeEditDetailsModal = () => {
+  currentEditingCourseId = null;
+  document.getElementById('edit-course-details-modal')?.classList.add('hidden');
+};
+
+document.getElementById('save-course-details-btn')?.addEventListener('click', async () => {
+  if (!currentEditingCourseId) return;
+  const newDetails = document.getElementById('edit-course-details-input').value.trim();
+  const btn = document.getElementById('save-course-details-btn');
+  btn.disabled = true;
+  btn.innerText = "⏳ جاري الحفظ...";
+
+  try {
+    const courseRef = doc(db, "genez_courses", String(currentEditingCourseId));
+    await updateDoc(courseRef, { details: newDetails });
+    const course = cloudAdminCourses.find(c => String(c.id) === String(currentEditingCourseId));
+    if(course) await logAdminActivity("[قسم المواد] تحديث تفاصيل", `[${course.code}] ${course.nameAr}`);
+    showToast("✅ تم حفظ التفاصيل بنجاح", "success");
+    window.closeEditDetailsModal();
+  } catch (error) {
+    console.error(error);
+    showToast("❌ حدث خطأ أثناء حفظ التفاصيل", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "حفظ التعديلات";
+  }
+});

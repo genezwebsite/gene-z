@@ -250,6 +250,7 @@
                 <input type="text" id="course-name-en" placeholder="Course Name in English" class="form-input p-2 rounded border border-theme bg-surface text-left text-xs" dir="ltr" required autocomplete="off" />
                 <input type="text" id="course-code" placeholder="BIOT-201" class="form-input p-2 rounded border border-theme bg-surface font-mono text-left text-xs" dir="ltr" required autocomplete="off" />
               </div>
+              <textarea id="course-details" placeholder="تفاصيل المادة (اختياري) - يمكنك وضع روابط أو نصوص..." class="form-input w-full p-2 rounded border border-theme bg-surface text-xs" rows="2"></textarea>
               <div class="grid sm:grid-cols-2 gap-3 items-center">
                 <select id="course-type" class="form-input p-2 rounded border border-theme bg-surface text-xs" autocomplete="off">
                   <option value="major-req">متطلبات تخصص إجبارية</option>
@@ -510,6 +511,18 @@
           </div>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- Modal لتعديل تفاصيل المادة -->
+  <div id="edit-course-details-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-surface border border-theme rounded-xl shadow-xl w-full max-w-lg p-5">
+      <h3 class="text-lg font-bold mb-4 text-accent">✏️ تعديل تفاصيل المادة</h3>
+      <textarea id="edit-course-details-input" rows="6" class="form-input w-full p-3 rounded-lg border border-theme bg-surface-secondary text-sm focus:border-accent outline-none" placeholder="اكتب التفاصيل هنا... (يمكنك وضع روابط لتصبح قابلة للنقر)"></textarea>
+      <div class="flex justify-end gap-3 mt-4">
+        <button type="button" onclick="closeEditDetailsModal()" class="px-4 py-2 text-sm font-semibold text-muted bg-surface-secondary rounded-lg border border-theme hover:bg-surface">إلغاء</button>
+        <button type="button" id="save-course-details-btn" class="px-4 py-2 text-sm font-semibold text-white bg-accent rounded-lg shadow-sm hover:opacity-90">حفظ التعديلات</button>
+      </div>
     </div>
   </div>
 

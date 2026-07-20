@@ -13,7 +13,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: 'Noto Kufi Arabic', sans-serif !important; overflow: hidden; height: 100vh; height: 100dvh; } /* منع التمرير المزدوج وإصلاح ارتفاع سفاري */
-    #admin-panel { height: 100vh; height: 100dvh; }
+    #admin-panel { height: 100vh; height: 100dvh; display: none; flex-direction: column; }
+    #admin-panel.visible { display: flex !important; }
     .admin-tab.active { background-color: var(--color-accent); color: white; border-color: var(--color-accent); }
   </style>
 </head>
@@ -46,7 +47,7 @@
   </section>
 
   <!-- لوحة التحكم الرئيسية -->
-  <div id="admin-panel" class="hidden h-screen flex flex-col">
+  <div id="admin-panel" class="h-screen flex flex-col">
     
     <!-- الهيدر (ارتفاع ثابت) -->
     <header class="bg-surface border-b border-theme shadow-sm shrink-0 h-16 relative z-40">
@@ -334,11 +335,11 @@
                 <div class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-theme text-[11px]">
                   <div>
                     <label class="block text-green-600 font-bold mb-1">📄 ملف المجلد العربي (AR Folder File - اختياري):</label>
-                    <input type="file" id="news-file-ar" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                    <input type="file" id="news-file-ar" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.mp4,.mov,.avi,.mkv,.webm,.m4v" class="form-input w-full p-1 rounded border border-theme bg-surface" />
                   </div>
                   <div>
                     <label class="block text-blue-600 font-bold mb-1">📄 ملف المجلد الإنجليزي (EN Folder File - اختياري):</label>
-                    <input type="file" id="news-file-en" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                    <input type="file" id="news-file-en" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.mp4,.mov,.avi,.mkv,.webm,.m4v" class="form-input w-full p-1 rounded border border-theme bg-surface" />
                   </div>
                 </div>
               </div>
@@ -401,11 +402,11 @@
                 <div class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-theme text-[11px]">
                   <div>
                     <label class="block text-green-600 font-bold mb-1">📄 ملف المجلد العربي (AR Folder File):</label>
-                    <input type="file" id="life-file-ar" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                    <input type="file" id="life-file-ar" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.mp4,.mov,.avi,.mkv,.webm,.m4v" class="form-input w-full p-1 rounded border border-theme bg-surface" />
                   </div>
                   <div>
                     <label class="block text-blue-600 font-bold mb-1">📄 ملف المجلد الإنجليزي (EN Folder File):</label>
-                    <input type="file" id="life-file-en" accept=".pdf,.doc,.docx,.zip,.png,.jpg" class="form-input w-full p-1 rounded border border-theme bg-surface" />
+                    <input type="file" id="life-file-en" accept=".pdf,.doc,.docx,.zip,.png,.jpg,.mp4,.mov,.avi,.mkv,.webm,.m4v" class="form-input w-full p-1 rounded border border-theme bg-surface" />
                   </div>
                 </div>
               </div>

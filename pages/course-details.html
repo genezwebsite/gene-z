@@ -20,6 +20,17 @@
       border-bottom-color: var(--color-accent);
       border-bottom-width: 2px;
     }
+    /* معاينة الملف بإطار داخلي */
+    #file-preview-overlay {
+      backdrop-filter: blur(6px);
+    }
+    .file-name-truncate {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+    }
   </style>
 </head>
 <body class="flex flex-col min-h-screen bg-surface text-content transition-colors duration-300">
@@ -55,6 +66,19 @@
   </main>
 
   <div id="site-footer"></div>
+
+  <!-- إطار معاينة الملف داخل الصفحة -->
+  <div id="file-preview-overlay" class="hidden fixed inset-0 bg-black/70 z-50 flex flex-col items-center justify-center p-3 sm:p-6">
+    <div class="bg-surface w-full max-w-4xl rounded-2xl shadow-2xl border border-theme flex flex-col" style="max-height:92vh">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-theme shrink-0">
+        <span id="preview-file-title" class="font-bold text-sm text-accent truncate max-w-[80%]"></span>
+        <button onclick="closeFilePreview()" class="text-muted hover:text-red-500 font-bold text-xl leading-none transition-colors" aria-label="إغلاق">×</button>
+      </div>
+      <div class="flex-1 overflow-hidden rounded-b-2xl bg-[#121212]">
+        <iframe id="preview-iframe" src="" class="w-full h-full border-0" style="min-height:65vh" sandbox="allow-scripts allow-same-origin allow-popups" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
 
   <script src="../assets/js/main.js"></script>
   
@@ -112,15 +136,27 @@
         const viewUrl = file.url || "#";
         const downUrl = file.downloadUrl || file.url || "#";
         
-        // دالة onClick لتسجيل نقرة التحميل
+        // تحويل رابط Google Drive للمعاينة المضمنة
+        function getDrivePreviewUrl(url) {
+          if (!url) return url;
+          const match = url.match(/[-\w]{25,}/);
+          return match ? `https://drive.google.com/file/d/${match[0]}/preview?rm=minimal&ui=2` : url;
+        }
+        const previewUrl = getDrivePreviewUrl(viewUrl);
+        const safeName = (file.name || '').replace(/'/g, "\\'");
+        const safePreview = (previewUrl || '').replace(/'/g, "\\'");
+        
         return `
           <div class="p-4 rounded-xl border border-theme bg-surface hover:border-accent hover:shadow-md transition-all flex flex-col justify-between gap-3 group">
             <div class="space-y-1.5">
               <span class="inline-block px-2 py-0.5 rounded bg-accent/10 text-accent font-bold text-[11px]">👤 مساهمة: ${contributor}</span>
-              <h4 class="font-bold text-sm text-content group-hover:text-accent transition-colors leading-snug truncate" title="${file.name}">📄 ${file.name}</h4>
+              <h4 class="font-bold text-sm text-content group-hover:text-accent transition-colors leading-snug" title="${file.name}" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;">📄 ${file.name}</h4>
             </div>
             <div class="flex gap-2 pt-2 border-t border-theme">
-              <a href="${viewUrl}" target="_blank" class="btn-outline flex-1 text-center py-1.5 text-xs rounded font-semibold text-blue-600 border-blue-200 hover:bg-blue-50"> معاينة</a>
+              <button type="button" onclick="openFilePreview('${safePreview}','${safeName}')"
+                class="btn-outline flex-1 text-center py-1.5 text-xs rounded font-semibold text-blue-600 border-blue-200 hover:bg-blue-50">
+                👁️ معاينة
+              </button>
               <!-- ✅ تسجيل حدث التحميل (Downloads) قبل الفتح -->
               <a href="${downUrl}" target="_blank" download onclick="window.trackEvent('genez_courses', '${courseId}', 'downloads');" class="btn-primary flex-1 text-center py-1.5 text-xs rounded font-semibold">⬇️ تنزيل</a>
             </div>
@@ -217,6 +253,36 @@
           });
         });
       }
+    });
+  </script>
+
+  <script>
+    // دوال معاينة الملف داخل الصفحة (iframe overlay)
+    window.openFilePreview = function(url, name) {
+      const overlay = document.getElementById('file-preview-overlay');
+      const iframe = document.getElementById('preview-iframe');
+      const title = document.getElementById('preview-file-title');
+      if (overlay && iframe) {
+        iframe.src = url;
+        if (title) title.textContent = name || '';
+        overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    };
+    window.closeFilePreview = function() {
+      const overlay = document.getElementById('file-preview-overlay');
+      const iframe = document.getElementById('preview-iframe');
+      if (overlay) overlay.classList.add('hidden');
+      if (iframe) iframe.src = '';
+      document.body.style.overflow = '';
+    };
+    // إغلاق بضغط Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') window.closeFilePreview();
+    });
+    // إغلاق بالضغط خارج الإطار
+    document.getElementById('file-preview-overlay')?.addEventListener('click', function(e) {
+      if (e.target === this) window.closeFilePreview();
     });
   </script>
 </body>

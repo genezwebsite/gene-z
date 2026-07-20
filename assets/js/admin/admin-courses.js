@@ -287,7 +287,7 @@ function renderCoursesAdminList() {
             <option value="summaries">ملخصات وشروحات</option>
             <option value="pastPapers">أسئلة سنوات سابقة</option>
           </select>
-          <input type="file" id="file-input-${course.id}" class="form-input w-full p-1 rounded border border-theme bg-surface text-[10px]" accept=".pdf,.png,.jpg,.zip" />
+          <input type="file" id="file-input-${course.id}" class="form-input w-full p-1 rounded border border-theme bg-surface text-[10px]" accept=".pdf,.png,.jpg,.zip,.mp4,.mov,.avi,.mkv,.webm,.m4v" />
           <button type="button" onclick="executeFileUpload(${course.id})" class="btn-primary w-full py-1.5 text-[11px] font-bold">بدء الرفع السحابي</button>
         </div>
 
@@ -314,12 +314,8 @@ window.executeFileUpload = async (courseId) => {
   const fileInput = document.getElementById(`file-input-${courseId}`);
   const file = fileInput?.files[0];
   if (!file) { showToast("اختر ملفاً", "error"); return; }
-  if (course.files && course.files.some(f => f.name === file.name)) { 
-    showToast("⚠️ هذا الملف موجود مسبقاً في المادة!", "error"); 
-    return; 
-  }
-  if (file.size > 12 * 1024 * 1024 || file.type.includes("video/")) {
-    showToast("⚠️ الفيديوهات والملفات الضخمة تُرفع من الدرايف مباشرة ثم اضغط مزامنة 🔄", "error"); 
+  if (file.size > 100 * 1024 * 1024) {
+    showToast("⚠️ حجم الملف تجاوز 100MB! ارفعه يدوياً على Drive ثم اضغط مزامنة 🔄", "error"); 
     fileInput.value = ""; 
     return;
   }

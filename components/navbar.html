@@ -19,8 +19,10 @@
     <!-- قائمة اللابتوب -->
     <div class="hidden md:flex justify-center items-center gap-2 py-3 overflow-x-auto">
       <!-- زر الجرس (التحديثات) -->
-      <a data-href="pages/updates.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm flex items-center justify-center" title="الإعلانات والتحديثات">
+      <a data-href="pages/updates.html" class="nav-link relative px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm flex items-center justify-center" title="الإعلانات والتحديثات">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+        <!-- نقطة الإشعار الحمراء -->
+        <span class="notification-dot hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
       </a>
       <a data-href="index.html" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Home">الرئيسية</a>
       <a data-href="index.html#about-us" class="nav-link px-4 py-2 rounded-full transition-all duration-300 font-semibold text-sm" data-en="Gene-Z">Gene-Z</a>
@@ -44,9 +46,11 @@
     <!-- قائمة الجوال المنسدلة (تم إصلاح الحاوية واستبدال الكلاس المسبب للقص) -->
     <div id="mobile-menu" class="hidden md:hidden flex-col w-full pb-4 space-y-2 px-2 pt-2 transition-all duration-300">
       <!-- زر الجرس للموبايل -->
-      <a data-href="pages/updates.html" class="nav-link flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme">
+      <a data-href="pages/updates.html" class="nav-link relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme">
         <svg class="w-5 h-5 text-accent transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-        <span data-en="Updates & Notifications">الإعلانات والتحديثات</span>
+        <span data-en="Updates &amp; Notifications">الإعلانات والتحديثات</span>
+        <!-- نقطة الإشعار الحمراء للموبايل -->
+        <span class="notification-dot hidden w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shrink-0"></span>
       </a>
       <a data-href="index.html" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="Home">الرئيسية</a>
       <a data-href="index.html#about-us" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="nav-link block px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm text-center border border-transparent hover:border-theme" data-en="About Us">Gene-Z</a>

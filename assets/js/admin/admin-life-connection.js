@@ -151,14 +151,14 @@ export function initLifeConnectionManager() {
           }
         }
 
-        if (fileAr && fileAr.size <= 12 * 1024 * 1024) {
+        if (fileAr && fileAr.size <= 100 * 1024 * 1024) {
           saveBtn.innerText = "⏳ جاري رفع الملف العربي...";
           const base64Ar = await toBase64(fileAr);
           const arRes = await fetchDriveAPI('life', 'upload', { targetFolderId: folderRes.subFolders['ar'].id, fileName: fileAr.name, mimeType: fileAr.type, base64Data: base64Ar });
           if (arRes?.success) attachedFiles.push({ id: arRes.fileId, name: arRes.fileName, url: arRes.fileUrl, langKey: 'ar', contributor: author });
         }
 
-        if (fileEn && fileEn.size <= 12 * 1024 * 1024) {
+        if (fileEn && fileEn.size <= 100 * 1024 * 1024) {
           saveBtn.innerText = "⏳ جاري رفع الملف الإنجليزي...";
           const base64En = await toBase64(fileEn);
           const enRes = await fetchDriveAPI('life', 'upload', { targetFolderId: folderRes.subFolders['en'].id, fileName: fileEn.name, mimeType: fileEn.type, base64Data: base64En });

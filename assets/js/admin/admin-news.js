@@ -145,7 +145,7 @@ export function initNewsManager() {
           }
         }
 
-        if (fileAr && fileAr.size <= 12 * 1024 * 1024) {
+        if (fileAr && fileAr.size <= 100 * 1024 * 1024) {
           saveBtn.innerText = "⏳ جاري رفع الملف العربي...";
           const base64Ar = await toBase64(fileAr);
           const arRes = await fetchDriveAPI('genomedia', 'upload', {
@@ -157,7 +157,7 @@ export function initNewsManager() {
           if (arRes?.success) attachedFiles.push({ id: arRes.fileId, name: arRes.fileName, url: arRes.fileUrl, langKey: 'ar', contributor: author });
         }
 
-        if (fileEn && fileEn.size <= 12 * 1024 * 1024) {
+        if (fileEn && fileEn.size <= 100 * 1024 * 1024) {
           saveBtn.innerText = "⏳ جاري رفع الملف الإنجليزي...";
           const base64En = await toBase64(fileEn);
           const enRes = await fetchDriveAPI('genomedia', 'upload', {

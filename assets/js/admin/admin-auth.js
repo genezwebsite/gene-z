@@ -149,7 +149,7 @@ export function initAuthManager() {
                   setTimeout(() => {
                     applyRolePermissions(newData, user.email);
                     if (adminGate) adminGate.classList.add('hidden');
-                    if (adminPanel) adminPanel.classList.remove('hidden');
+                    if (adminPanel) adminPanel.classList.add('visible');
                     
                     if (!modulesInitialized) {
                       setupDashboardModules(); 
@@ -165,7 +165,7 @@ export function initAuthManager() {
           // فتح البوابة وتطبيق الصلاحيات
           applyRolePermissions(roleData, user.email);
           if (adminGate) adminGate.classList.add('hidden');
-          if (adminPanel) adminPanel.classList.remove('hidden');
+          if (adminPanel) adminPanel.classList.add('visible');
           
           if (!modulesInitialized) {
             setupDashboardModules(); 
@@ -185,7 +185,7 @@ export function initAuthManager() {
       }
     } else {
       if (adminGate) adminGate.classList.remove('hidden');
-      if (adminPanel) adminPanel.classList.add('hidden');
+      if (adminPanel) adminPanel.classList.remove('visible');
       sessionStorage.removeItem("adminEmail");
       localStorage.removeItem("adminEmail");
       modulesInitialized = false;

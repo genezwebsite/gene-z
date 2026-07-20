@@ -73,19 +73,32 @@
   }
 
   function bindMobileNav() {
-    // There was a bug where mobile-menu-toggle wasn't correctly referenced, we use direct element or event now.
-    // However, keeping the original function structure safe
     const toggle = document.querySelector("button[aria-label='Open menu']");
     const menu = document.getElementById("mobile-menu");
     if (!toggle || !menu) return;
 
-    toggle.addEventListener("click", () => {
+    // ✅ إزالة أي مستمعات قديمة بنسخ الزر
+    const newToggle = toggle.cloneNode(true);
+    toggle.parentNode.replaceChild(newToggle, toggle);
+
+    newToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
       menu.classList.toggle("hidden");
     });
 
+    // إغلاق القائمة عند النقر على روابط داخلها
     menu.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => menu.classList.add("hidden"));
+      link.addEventListener("click", () => {
+        menu.classList.add("hidden");
+      });
     });
+
+    // إغلاق القائمة عند النقر خارجها
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && e.target !== newToggle && !newToggle.contains(e.target)) {
+        menu.classList.add("hidden");
+      }
+    }, { capture: true });
   }
 
   function bindThemeToggles() {
@@ -138,7 +151,7 @@
 
     const langLabel = document.getElementById("lang-label");
     if (langLabel) {
-      langLabel.textContent = lang === "ar" ? "EN" : "عربي";
+      langLabel.textContent = lang === "ar" ? "EN" : "عر";
     }
 
     window.dispatchEvent(new CustomEvent("genez:lang-changed", { detail: { lang } }));
@@ -156,10 +169,13 @@
       if (!snapshot.empty) {
         const latestDoc = snapshot.docs[0];
         const latestTime = latestDoc.data().timestamp?.toMillis() || 0;
-        const lastSeen = localStorage.getItem("genez_last_seen_update") || 0;
+        const lastSeen = parseInt(localStorage.getItem("genez_last_seen_update") || "0");
         
-        if (latestTime > parseInt(lastSeen)) {
-          document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.remove("hidden"));
+        if (latestTime > lastSeen) {
+          // ✅ إظهار النقطة الحمراء على جميع روابط الإعلانات
+          showNotificationDot();
+        } else {
+          hideNotificationDot();
         }
       }
     } catch (err) {
@@ -167,11 +183,20 @@
     }
   }
 
+  function showNotificationDot() {
+    document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.remove("hidden"));
+  }
+
+  function hideNotificationDot() {
+    document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.add("hidden"));
+  }
+
   function bindNotificationBell() {
+    // ✅ لما يضغط على رابط الإعلانات يُسجِّل الوقت ويُخفي النقطة
     document.querySelectorAll("a[href*='updates.html'], a[data-href*='updates.html']").forEach(link => {
       link.addEventListener("click", () => {
         localStorage.setItem("genez_last_seen_update", Date.now().toString());
-        document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.add("hidden"));
+        hideNotificationDot();
       });
     });
   }

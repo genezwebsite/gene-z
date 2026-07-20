@@ -101,6 +101,9 @@ function renderPublicUpdates() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // ✅ تسجيل وقت المشاهدة عند فتح الصفحة (لإخفاء النقطة الحمراء)
+    localStorage.setItem("genez_last_seen_update", Date.now().toString());
+    
     initCloudUpdatesListener();
     
     window.addEventListener("genez:lang-changed", () => {

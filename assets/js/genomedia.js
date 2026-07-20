@@ -179,7 +179,7 @@ import { trackEvent } from "./admin/admin-analytics.js";
             <div class="flex items-center gap-3 min-w-0 flex-1 w-full">
               <span class="text-accent text-2xl shrink-0">📄</span>
               <div class="min-w-0">
-                <h4 class="font-bold text-sm text-content truncate">${file.name}</h4>
+              <h4 class="font-bold text-sm text-content truncate" style="max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;">${file.name}</h4>
                 <span class="text-[11px] text-muted font-mono">👤 ${file.contributor || topic.author || 'Gene_Z'}</span>
               </div>
             </div>

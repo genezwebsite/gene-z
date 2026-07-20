@@ -164,13 +164,21 @@
       const { db } = await import("./firebase-init.js");
       const { collection, query, orderBy, limit, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
       
-      const q = query(collection(db, "genez_updates"), orderBy("timestamp", "desc"), limit(1));
+      const q = query(collection(db, "genez_updates"), orderBy("scheduledTimestamp", "desc"), limit(5));
       const snapshot = await getDocs(q);
       
-      if (!snapshot.empty) {
-        const latestDoc = snapshot.docs[0];
-        const latestTime = latestDoc.data().timestamp?.toMillis() || 0;
-        
+      let latestTime = 0;
+      const now = Date.now();
+      
+      snapshot.forEach(docSnap => {
+         const time = docSnap.data().scheduledTimestamp || 0;
+         // نبحث عن أحدث إعلان "منشور بالفعل" وليس مجدولاً للمستقبل
+         if (time <= now && time > latestTime) {
+             latestTime = time;
+         }
+      });
+
+      if (latestTime > 0) {
         // حفظ أحدث وقت عالمياً لتجنب مشاكل فارق التوقيت (Clock Skew)
         window.genezLatestUpdateTimestamp = latestTime;
 

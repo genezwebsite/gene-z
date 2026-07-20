@@ -73,32 +73,33 @@
   }
 
   function bindMobileNav() {
-    const toggle = document.querySelector("button[aria-label='Open menu']");
-    const menu = document.getElementById("mobile-menu");
-    if (!toggle || !menu) return;
+    if (window._geneZMobileNavBound) return;
+    window._geneZMobileNavBound = true;
 
-    // ✅ إزالة أي مستمعات قديمة بنسخ الزر
-    const newToggle = toggle.cloneNode(true);
-    toggle.parentNode.replaceChild(newToggle, toggle);
-
-    newToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      menu.classList.toggle("hidden");
-    });
-
-    // إغلاق القائمة عند النقر على روابط داخلها
-    menu.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => {
-        menu.classList.add("hidden");
-      });
-    });
-
-    // إغلاق القائمة عند النقر خارجها
     document.addEventListener("click", (e) => {
-      if (!menu.contains(e.target) && e.target !== newToggle && !newToggle.contains(e.target)) {
+      const toggleBtn = e.target.closest("button[aria-label='Open menu']");
+      const menu = document.getElementById("mobile-menu");
+      
+      if (!menu) return;
+
+      // 1. إذا تم النقر على زر القائمة
+      if (toggleBtn) {
+        menu.classList.toggle("hidden");
+        return;
+      }
+
+      // 2. إذا تم النقر على رابط داخل القائمة (لإغلاقها عند التنقل)
+      const link = e.target.closest("#mobile-menu a");
+      if (link) {
+        menu.classList.add("hidden");
+        return;
+      }
+
+      // 3. إذا تم النقر خارج القائمة
+      if (!menu.contains(e.target)) {
         menu.classList.add("hidden");
       }
-    }, { capture: true });
+    });
   }
 
   function bindThemeToggles() {

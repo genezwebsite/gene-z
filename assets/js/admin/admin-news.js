@@ -283,7 +283,7 @@ async function renderNewsList() {
                 <option value="ar">المجلد العربي (Arabic Files)</option>
                 <option value="en">المجلد الإنجليزي (English Files)</option>
               </select>
-              <input type="file" id="news-file-input-${item.id}" class="form-input w-full p-1 rounded border border-theme bg-surface text-[10px]" accept=".pdf,.doc,.docx,.png,.jpg,.zip" />
+              <input type="file" id="news-file-input-${item.id}" class="form-input w-full p-1 rounded border border-theme bg-surface text-[10px]" accept=".pdf,.doc,.docx,.png,.jpg,.zip,.mp4,.mov,.avi,.mkv,.webm,.m4v" />
             </div>
             <button type="button" onclick="executeNewsFileUpload(${item.id})" class="btn-primary w-full py-1.5 text-[11px] font-bold">بدء الرفع السحابي للملف 🚀</button>
           </div>

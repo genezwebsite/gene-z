@@ -164,7 +164,8 @@
       const { db } = await import("./firebase-init.js");
       const { collection, query, orderBy, limit, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
       
-      const q = query(collection(db, "genez_updates"), orderBy("scheduledTimestamp", "desc"), limit(5));
+      // تبسيط الاستعلام بالكامل لتفادي أي قيود من فحص الفهارس (Indexes)
+      const q = query(collection(db, "genez_updates"));
       const snapshot = await getDocs(q);
       
       let latestTime = 0;
@@ -172,7 +173,6 @@
       
       snapshot.forEach(docSnap => {
          const time = docSnap.data().scheduledTimestamp || 0;
-         // نبحث عن أحدث إعلان "منشور بالفعل" وليس مجدولاً للمستقبل
          if (time <= now && time > latestTime) {
              latestTime = time;
          }

@@ -63,7 +63,20 @@ export function initUpdatesManager() {
     }
     
     const scheduledDateVal = document.getElementById('update-schedule-date')?.value;
-    const publishDate = scheduledDateVal ? new Date(scheduledDateVal) : new Date();
+    let publishDate = new Date();
+    
+    if (scheduledDateVal) {
+      const selectedDate = new Date(scheduledDateVal);
+      const today = new Date();
+      // إذا كان التاريخ المختار هو اليوم، نستخدم الوقت الحالي بالدقة (ساعات ودقائق)
+      if (selectedDate.toDateString() === today.toDateString()) {
+         publishDate = today;
+      } else {
+         // إذا كان يوماً آخر، نستخدم منتصف ليل ذلك اليوم
+         publishDate = selectedDate;
+      }
+    }
+
     const formattedDate = publishDate.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
 
     const newData = {

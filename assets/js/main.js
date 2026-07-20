@@ -170,13 +170,23 @@
       if (!snapshot.empty) {
         const latestDoc = snapshot.docs[0];
         const latestTime = latestDoc.data().timestamp?.toMillis() || 0;
+        
+        // حفظ أحدث وقت عالمياً لتجنب مشاكل فارق التوقيت (Clock Skew)
+        window.genezLatestUpdateTimestamp = latestTime;
+
         const lastSeen = parseInt(localStorage.getItem("genez_last_seen_update") || "0");
         
-        if (latestTime > lastSeen) {
-          // ✅ إظهار النقطة الحمراء على جميع روابط الإعلانات
-          showNotificationDot();
+        // نتحقق أيضاً إذا كنا في صفحة الإعلانات حالياً
+        const isUpdatesPage = window.location.pathname.includes("updates.html");
+        
+        if (isUpdatesPage) {
+           // إذا كان داخل صفحة الإعلانات، نعتبر أنه شاهدها ونحدث الوقت
+           localStorage.setItem("genez_last_seen_update", latestTime.toString());
+           hideNotificationDot();
+        } else if (latestTime > lastSeen) {
+           showNotificationDot();
         } else {
-          hideNotificationDot();
+           hideNotificationDot();
         }
       }
     } catch (err) {
@@ -191,12 +201,16 @@
   function hideNotificationDot() {
     document.querySelectorAll(".notification-dot").forEach(dot => dot.classList.add("hidden"));
   }
+  
+  // إتاحته عالمياً لكي يستخدمه ملف updates.js لو لزم الأمر
+  window.hideNotificationDot = hideNotificationDot;
 
   function bindNotificationBell() {
-    // ✅ لما يضغط على رابط الإعلانات يُسجِّل الوقت ويُخفي النقطة
+    // ✅ لما يضغط على رابط الإعلانات يُسجِّل أحدث وقت بدلاً من Date.now() لتجنب فارق توقيت الجهاز
     document.querySelectorAll("a[href*='updates.html'], a[data-href*='updates.html']").forEach(link => {
       link.addEventListener("click", () => {
-        localStorage.setItem("genez_last_seen_update", Date.now().toString());
+        const timeToSave = window.genezLatestUpdateTimestamp || Date.now();
+        localStorage.setItem("genez_last_seen_update", timeToSave.toString());
         hideNotificationDot();
       });
     });

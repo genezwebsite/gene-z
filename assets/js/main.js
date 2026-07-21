@@ -161,7 +161,7 @@
   async function checkNotifications() {
     try {
       // Dynamic import to avoid slowing down main page load
-      const { db } = await import(`${COMPONENT_BASE}assets/js/firebase-init.js`);
+      const { db } = await import("./firebase-init.js");
       const { collection, query, orderBy, limit, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
       
       // تبسيط الاستعلام بالكامل لتفادي أي قيود من فحص الفهارس (Indexes)
@@ -227,7 +227,7 @@
   document.addEventListener("DOMContentLoaded", async () => {
     // ✅ تشغيل عدّاد الزيارات اللحظي عبر Dynamic Import (بدون أي تعارض مع المتصفح)
     if (!sessionStorage.getItem("genez_visit_tracked")) {
-      import(`${COMPONENT_BASE}assets/js/admin/admin-analytics.js`)
+      import("./admin/admin-analytics.js")
         .then((mod) => {
           mod.trackEvent(null, null, "visits");
         })

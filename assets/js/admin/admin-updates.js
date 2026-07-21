@@ -66,13 +66,16 @@ export function initUpdatesManager() {
     let publishDate = new Date();
     
     if (scheduledDateVal) {
-      const selectedDate = new Date(scheduledDateVal);
+      // تفكيك التاريخ لضمان بناء كائن Date بتوقيت المستخدم المحلي بدلاً من UTC
+      const [year, month, day] = scheduledDateVal.split('-');
+      const selectedDate = new Date(year, month - 1, day);
       const today = new Date();
+      
       // إذا كان التاريخ المختار هو اليوم، نستخدم الوقت الحالي بالدقة (ساعات ودقائق)
       if (selectedDate.toDateString() === today.toDateString()) {
          publishDate = today;
       } else {
-         // إذا كان يوماً آخر، نستخدم منتصف ليل ذلك اليوم
+         // إذا كان يوماً آخر، نستخدم منتصف ليل ذلك اليوم محلياً
          publishDate = selectedDate;
       }
     }

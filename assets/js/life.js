@@ -199,7 +199,10 @@ import { trackEvent } from "./admin/admin-analytics.js";
               <span class="text-accent text-2xl">📄</span>
               <div class="min-w-0">
                 <h4 class="font-bold text-sm text-content" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;">${file.name}</h4>
-                <span class="text-[11px] text-muted font-mono">👤 ${file.contributor || topic.author || 'Gene_Z'}</span>
+                <span class="text-[11px] text-muted font-mono">👤 ${(() => {
+                  let cont = file.contributor || topic.author || 'Gene_Z';
+                  return cont === "مرفوع عبر Drive ☁️" ? "(فريق Gene_Z)" : cont;
+                })()}</span>
               </div>
             </div>
             <button type="button" onclick="openEmbeddedViewer('${strictUrl}', '${file.name}')" class="btn-primary py-2 px-5 text-xs rounded-lg font-bold shrink-0 flex items-center gap-2 shadow-sm">

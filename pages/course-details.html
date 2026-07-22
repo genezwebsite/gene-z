@@ -132,7 +132,8 @@
       }
 
       function createFileCard(file, courseId) {
-        const contributor = file.contributor || "فريق Gene_Z";
+        let contributor = file.contributor || "فريق Gene_Z";
+        if (contributor === "مرفوع عبر Drive ☁️") contributor = "(فريق Gene_Z)";
         const viewUrl = file.url || "#";
         const downUrl = file.downloadUrl || file.url || "#";
         

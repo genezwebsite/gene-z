@@ -375,7 +375,11 @@ window.syncCourseFiles = async (courseId) => {
   try {
     const result = await fetchDriveAPI('courses', 'syncFolder', { subFolders: course.subFolders });
     if (result?.success && result.syncedFiles) {
-      await updateDoc(doc(db, "genez_courses", String(courseId)), { files: result.syncedFiles });
+      const processedFiles = result.syncedFiles.map(file => {
+          if (file.contributor === "مرفوع عبر Drive ☁️") file.contributor = "(فريق Gene_Z)";
+          return file;
+      });
+      await updateDoc(doc(db, "genez_courses", String(courseId)), { files: processedFiles });
       
       await logAdminActivity("[قسم المواد] مزامنة مجلدات المادة", `[${course.code}] ${course.nameAr}`);
       

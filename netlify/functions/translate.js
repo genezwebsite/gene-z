@@ -74,12 +74,15 @@ exports.handler = async function(event, context) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = "";
+      try {
+        errorText = await response.text();
+      } catch(e) {}
       console.error("Gemini API Error Status:", response.status, "Details:", errorText);
       return {
-        statusCode: 502,
+        statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Failed to communicate with Gemini API" })
+        body: JSON.stringify({ error: "Gemini API Error", details: errorText })
       };
     }
 

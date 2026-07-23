@@ -16,7 +16,10 @@ async function smartTranslate(text, targetLang) {
     });
 
     if (!response.ok) {
-      throw new Error('فشل الاتصال بخدمة الترجمة');
+      let errData = {};
+      try { errData = await response.json(); } catch(e) {}
+      console.error("Translation API Error Details:", errData);
+      throw new Error(errData.error || 'فشل الاتصال بخدمة الترجمة');
     }
 
     const data = await response.json();

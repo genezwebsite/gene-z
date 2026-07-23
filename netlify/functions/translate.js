@@ -57,20 +57,22 @@ exports.handler = async function(event, context) {
     }
 
     const languageStr = targetLang === 'ar' ? 'Arabic' : 'English';
-    const prompt = `You are an expert academic translator specializing in Biotechnology and Genetic Engineering. Translate the following text into ${languageStr}. Ensure scientific terminology is highly accurate. Return ONLY the translated text with absolutely no quotes, markdown formatting, or conversational filler. Text: ${text}`;
+    const payload = {
+      contents: [{
+        parts: [{
+          text: `You are an expert academic translator specializing in Biotechnology. Translate the following text into ${languageStr}. Return ONLY the translated text. Text: ${text}`
+        }]
+      }]
+    };
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -87,17 +89,9 @@ exports.handler = async function(event, context) {
     }
 
     const data = await response.json();
-    let translatedText = "";
-    
-    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
-      translatedText = data.candidates[0].content.parts[0].text.trim();
-    }
+    const translatedText = data.candidates[0].content.parts[0].text;
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ translatedText: translatedText })
-    };
+    return { statusCode: 200, headers, body: JSON.stringify({ translatedText }) };
 
   } catch (error) {
     console.error("Translation Function Error:", error);

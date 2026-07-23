@@ -173,7 +173,17 @@
         <div id="updates-section" class="admin-section hidden">
           <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>🔔</span> إدارة أحدث الإعلانات والتحديثات</h2>
           <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
-            <h3 class="text-base font-bold mb-4">إضافة إعلان جامعي جديد</h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-base font-bold">➕إضافة إعلان جامعي جديد</h3>
+              <button type="button" class="ai-translate-btn p-1.5 rounded-lg border border-theme shadow-sm bg-surface-secondary/50 hover:bg-surface-secondary text-muted hover:text-accent transition-all duration-300 flex items-center justify-center group" title="ترجمة ذكية" data-target="update">
+                <div class="flex items-center gap-1 font-bold text-sm btn-icon group-hover:scale-105 transition-transform">
+                  <span>E</span>
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                  <span>ع</span>
+                </div>
+                <span class="loading-spinner hidden w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></span>
+              </button>
+            </div>
             <form id="update-form" class="space-y-4 text-xs" autocomplete="off">
               <div class="grid sm:grid-cols-2 gap-4">
                 <input type="text" id="update-title" placeholder="عنوان الإعلان (عربي) - مثال: صدور جدول الميد" class="form-input w-full p-2.5 rounded border border-theme bg-surface" required autocomplete="off" />
@@ -244,7 +254,17 @@
           </div>
 
           <div class="card p-5 border border-theme shadow-sm mb-6 bg-surface">
-            <h3 class="text-base font-bold mb-3">➕ إضافة مادة دراسية جديدة</h3>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-base font-bold">➕ إضافة مادة دراسية جديدة</h3>
+              <button type="button" class="ai-translate-btn p-1.5 rounded-lg border border-theme shadow-sm bg-surface-secondary/50 hover:bg-surface-secondary text-muted hover:text-accent transition-all duration-300 flex items-center justify-center group" title="ترجمة ذكية" data-target="course">
+                <div class="flex items-center gap-1 font-bold text-sm btn-icon group-hover:scale-105 transition-transform">
+                  <span>E</span>
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                  <span>ع</span>
+                </div>
+                <span class="loading-spinner hidden w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></span>
+              </button>
+            </div>
             <form id="add-course-form" class="space-y-3 text-xs" autocomplete="off">
               <div class="grid sm:grid-cols-3 gap-3">
                 <input type="text" id="course-name-ar" placeholder="اسم المادة بالعربي" class="form-input p-2 rounded border border-theme bg-surface text-xs" required autocomplete="off" />
@@ -291,7 +311,17 @@
           <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>📰</span> إدارة جينوميديا (الأخبار والمقالات العلمية)</h2>
           
           <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
-            <h3 class="text-base font-bold mb-4 text-accent">✍️ نشر مقال علمي أو خبر جديد (مع مجلدات عربية وإنجليزية سحابية)</h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-base font-bold text-accent">✍️ نشر مقال علمي أو خبر جديد</h3>
+              <button type="button" class="ai-translate-btn p-1.5 rounded-lg border border-theme shadow-sm bg-surface-secondary/50 hover:bg-surface-secondary text-muted hover:text-accent transition-all duration-300 flex items-center justify-center group" title="ترجمة ذكية" data-target="news">
+                <div class="flex items-center gap-1 font-bold text-sm btn-icon group-hover:scale-105 transition-transform">
+                  <span>E</span>
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                  <span>ع</span>
+                </div>
+                <span class="loading-spinner hidden w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></span>
+              </button>
+            </div>
             <form id="news-form" class="space-y-4 text-xs" autocomplete="off">
               <div class="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -362,7 +392,17 @@
           <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>🧬</span> إدارة الربط مع الحياة (التطبيقات العملية)</h2>
           
           <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
-            <h3 class="text-base font-bold mb-4 text-accent">🔬 إضافة بحث أو تطبيق عملي (مجلدات AR/EN)</h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-base font-bold text-accent">🔬 إضافة بحث أو تطبيق عملي </h3>
+              <button type="button" class="ai-translate-btn p-1.5 rounded-lg border border-theme shadow-sm bg-surface-secondary/50 hover:bg-surface-secondary text-muted hover:text-accent transition-all duration-300 flex items-center justify-center group" title="ترجمة ذكية" data-target="life">
+                <div class="flex items-center gap-1 font-bold text-sm btn-icon group-hover:scale-105 transition-transform">
+                  <span>E</span>
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                  <span>ع</span>
+                </div>
+                <span class="loading-spinner hidden w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></span>
+              </button>
+            </div>
             <form id="life-form" class="space-y-4 text-xs" autocomplete="off">
               <div class="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -429,7 +469,17 @@
           <h2 class="text-2xl font-bold mb-6 text-accent flex items-center gap-2"><span>🎓</span> إدارة الدورات والتدريب الإضافي</h2>
           
           <div class="card p-6 border border-theme shadow-sm mb-6 bg-surface">
-            <h3 class="text-base font-bold mb-4 text-accent">➕ إضافة كورس تدريبي جديد</h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-base font-bold text-accent">➕ إضافة كورس تدريبي جديد</h3>
+              <button type="button" class="ai-translate-btn p-1.5 rounded-lg border border-theme shadow-sm bg-surface-secondary/50 hover:bg-surface-secondary text-muted hover:text-accent transition-all duration-300 flex items-center justify-center group" title="ترجمة ذكية" data-target="extra">
+                <div class="flex items-center gap-1 font-bold text-sm btn-icon group-hover:scale-105 transition-transform">
+                  <span>E</span>
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                  <span>ع</span>
+                </div>
+                <span class="loading-spinner hidden w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></span>
+              </button>
+            </div>
             <form id="extra-course-form" class="space-y-4 text-xs" autocomplete="off">
               <!-- العناوين -->
               <div class="grid sm:grid-cols-2 gap-4">

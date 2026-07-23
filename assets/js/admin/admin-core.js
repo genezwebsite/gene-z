@@ -6,6 +6,7 @@ import { initLifeConnectionManager } from "./admin-life-connection.js";
 import { initNewsManager } from "./admin-news.js";
 import { initCoursesExtraManager } from "./admin-courses-extra.js";
 import { initAnalyticsDashboard } from './admin-analytics.js';
+import { initSmartTranslator } from "./admin-translator.js";
 
 // متغيرات الحالة العامة للوحة
 export const DRIVE_APIS = {
@@ -109,4 +110,5 @@ export function setupDashboardModules() {
   initNewsManager();
   initLifeConnectionManager();
   initCoursesExtraManager();
+  initSmartTranslator();
 }
